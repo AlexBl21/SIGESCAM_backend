@@ -7,6 +7,9 @@ const Usuario = db.define("usuario", {
     email: { type: DataTypes.STRING(100), allowNull: false},
     contrasena: {type: DataTypes.STRING(250), allowNull: false}, 
     foto: {type: DataTypes.STRING(255)}
+}, {
+    timestamps: false, 
+    freezeTableName: true
 });
 
 export default Usuario;
