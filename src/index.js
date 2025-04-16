@@ -10,7 +10,13 @@ import Venta from "./models/Venta.js";
 import DetalleVenta from "./models/DetalleVenta.js";
 import Producto from "./models/Producto.js";
 import Categoria from "./models/Categoria.js";
- 
+import Compra from "./models/Compra.js";
+import Notificacion from "./models/Notificacion.js";
+import TipoNotificacion from "./models/TipoNotificacion.js";
+import PreferenciaNotificacion from "./models/PreferenciaNotificacion.js";
+import Sugerencia from "./models/Sugerenicia.js";
+import NotificacionUsuario from "./models/NotificacionUsuario.js";
+
 dotenv.config({
     path: "../.env"
 });
@@ -25,7 +31,7 @@ db.authenticate()
 //funcion para la creación de las tablas 
 async function main(){
     try{
-        await db.sync({alter: true});
+        await db.sync({force: true});
         console.log("Tablas creadas exitosamente B)")
     }catch(error){
       console.log(error.message);
