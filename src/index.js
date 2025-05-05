@@ -15,12 +15,13 @@ import TipoNotificacion from "./models/TipoNotificacion.js";
 import PreferenciaNotificacion from "./models/PreferenciaNotificacion.js";
 import Sugerencia from "./models/Sugerencia.js";
 import NotificacionUsuario from "./models/NotificacionUsuario.js";
-
+import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
 dotenv.config({
     path: "../.env"
 });
 
 const app = express();
+app.use(express.json());
 
 //test conexion bd
 db.authenticate()
@@ -43,3 +44,5 @@ async function main(){
 app.listen(process.env.PUERTO, () =>{
     console.log(`escuchando en http://localhost:${process.env.PUERTO}`);
 });
+
+app.use("/sugerencias", SugerenciaRoutes);

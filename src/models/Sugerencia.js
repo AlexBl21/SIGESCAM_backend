@@ -4,11 +4,11 @@ import Usuario from "./Usuario.js";
 
 const Sugerencia = db.define("sugerencia", {
     id_sugerencia: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true}, 
-    nombre_Producto: { type: DataTypes.STRING(60), allownull: false}, 
+    nombre_producto: { type: DataTypes.STRING(60), allownull: false}, 
     descripcion: { type: DataTypes.STRING(100), allownull: false}, 
     fecha_registro: { type: DataTypes.DATE, allowNull: false},
-    estado: { type: DataTypes.BOOLEAN, allowNull: false},
-    clasificada: {type: DataTypes.BOOLEAN, allowNull: false}
+    estado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false},
+    clasificada: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false}
 }, {
     timestamps: false, 
     freezeTableName: true
