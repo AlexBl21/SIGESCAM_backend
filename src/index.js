@@ -28,6 +28,7 @@ db.authenticate()
   .catch((error) => console.log("Connection error: ", error));
 
 //funcion para la creación de las tablas 
+/*
 async function main(){
     try{
         await db.sync({force: true});
@@ -37,7 +38,7 @@ async function main(){
     }
   }
 
-  main();
+  main();*/
 
 app.listen(process.env.PUERTO, () =>{
     console.log(`escuchando en http://localhost:${process.env.PUERTO}`);
