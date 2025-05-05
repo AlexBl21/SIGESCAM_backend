@@ -3,7 +3,7 @@ import db from"../db/db.js";
 import { DataTypes } from "sequelize";
 import Producto from "./Producto.js";
 import TipoNotificacion from "./TipoNotificacion.js";
-import Sugerencia from "./Sugerenicia.js";
+import Sugerencia from "./Sugerencia.js";
 
 const Notificacion = db.define("notificacion", {
     id_notificacion: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },

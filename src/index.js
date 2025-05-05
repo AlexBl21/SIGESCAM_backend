@@ -2,7 +2,6 @@ import express from "express";
 import dotenv from "dotenv";
 import db from "./db/db.js";
 import Rol from "./models/Rol.js";
-import UsuarioRol from "./models/UsuarioRol.js";
 import Usuario from "./models/Usuario.js";
 import Abono from "./models/Abono.js";
 import Deudor from "./models/Deudor.js";
@@ -14,7 +13,7 @@ import Compra from "./models/Compra.js";
 import Notificacion from "./models/Notificacion.js";
 import TipoNotificacion from "./models/TipoNotificacion.js";
 import PreferenciaNotificacion from "./models/PreferenciaNotificacion.js";
-import Sugerencia from "./models/Sugerenicia.js";
+import Sugerencia from "./models/Sugerencia.js";
 import NotificacionUsuario from "./models/NotificacionUsuario.js";
 
 dotenv.config({

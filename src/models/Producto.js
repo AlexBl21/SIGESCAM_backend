@@ -7,7 +7,8 @@ const Producto = db.define("producto", {
     nombre: { type: DataTypes.STRING(70), allownull: false},
     precio_compra: { type: DataTypes.DECIMAL(10, 2), allowNull: false}, 
     precio_venta: { type: DataTypes.DECIMAL(10, 2), allowNull: false}, 
-    cantidad: {type: DataTypes.INTEGER, allowNull: false}
+    cantidad: {type: DataTypes.INTEGER, allowNull: false},
+    activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true}
 }, {
     timestamps: false, 
     freezeTableName: true
