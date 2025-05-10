@@ -1,10 +1,11 @@
 import Sugerencia from "../models/Sugerencia.js";
 import usuarioService from "../services/UsuarioService.js";
+import { actualizarCorreoElectronico, buscarPorDNI } from "../services/UsuarioService.js";
 
 async function registrar(req, res) {
     try {
         const usuario = await usuarioService.registrar(
-            req.body.dni, 
+            req.body.dni,
             req.body.nombre,
             req.body.email,
             req.body.contrasena,
@@ -16,7 +17,7 @@ async function registrar(req, res) {
     } catch (error) {
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
-          });
+        });
     };
 };
 
@@ -29,51 +30,96 @@ async function listar(req, res) {
         console.log(error);
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
-          });
+        });
     }
 };
 
 
 async function editar(req, res) {
     try {
-        const {dni} = req.params;
+        const { dni } = req.params;
         const usuario = await usuarioService.editar(
-        dni,
-        req.body.nombre,
-        req.body.id_rol,
-        req.body.email,
-        req.body.telefono,
-);
-res.status(200).json(usuario);
+            dni,
+            req.body.nombre,
+            req.body.id_rol,
+            req.body.email,
+            req.body.telefono,
+        );
+        res.status(200).json(usuario);
     } catch (error) {
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
-          });
+        });
     }
 };
 
 async function cambioDeEstado(req, res) {
     try {
-        const {dni} = req.params;
+        const { dni } = req.params;
         const usuario = await usuarioService.cambioDeEstado(dni, req.body.estado);
         res.status(200).json(usuario);
     } catch (error) {
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
-          });
+        });
     }
 }
 
 async function buscarPorId(req, res) {
-    try{
-        const{dni} = req.params;
+    try {
+        const { dni } = req.params;
         const usuario = await usuarioService.buscarPorId(dni);
         res.status(200).json(usuario);
-    }catch(error){
+    } catch (error) {
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
-          });
+        });
     }
 }
 
-export default{registrar, listar, editar, cambioDeEstado, buscarPorId}
+export async function obtenerUsuarioPorDNI(req, res) {
+    try {
+        const { dni } = req.params;
+        const usuario = await buscarPorDNI(dni);
+        return res.status(200).json(usuario);
+    } catch (error) {
+        if (error.name === "NotFoundError") {
+            return res.status(404).json({ message: error.message });
+        }
+        return res.status(500).json({ message: "Error al buscar el usuario." });
+    }
+}
+
+
+export async function editarCorreo(req, res) {
+    try {
+        const { dni } = req.params;
+        const { nuevoEmail } = req.body;
+
+        const usuarioActualizado = await actualizarCorreoElectronico(dni, nuevoEmail);
+
+        return res.status(200).json({
+            message: "Correo electrónico actualizado exitosamente",
+            usuario: {
+                DNI: usuarioActualizado.dni,
+                nombre: usuarioActualizado.nombre,
+                email: usuarioActualizado.email,
+            },
+        });
+
+    } catch (error) {
+        if (error.name === "BadRequestError") {
+            return res.status(400).json({ message: error.message });
+        }
+
+        if (error.name === "NotFoundError") {
+            return res.status(404).json({ message: error.message });
+        }
+
+        return res.status(500).json({ message: "Error al actualizar el correo" + error.message });
+    }
+}
+
+
+
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId }
