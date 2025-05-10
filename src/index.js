@@ -25,7 +25,7 @@ dotenv.config({
 const app = express();
 app.use(express.json());
 
-//test conexion bd
+//test conexion de la bd
 db.authenticate()
   .then(() => console.log("Databse connection successful"))
   .catch((error) => console.log("Connection error: ", error));
