@@ -22,4 +22,12 @@ export class InternalServerError extends Error{
         this.name = "InternalServerError";
         this.statusCode = 500;
     }
+};
+//este es para cuando un registro ya existe
+export class Conflict extends Error{
+    constructor(message){
+        super(message);
+        this.name = "Confict";
+        this.statusCode = 409;
+    }
 }

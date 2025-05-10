@@ -16,6 +16,8 @@ import PreferenciaNotificacion from "./models/PreferenciaNotificacion.js";
 import Sugerencia from "./models/Sugerencia.js";
 import NotificacionUsuario from "./models/NotificacionUsuario.js";
 import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
+import usuarioRoutes from "./routes/UsuarioRoutes.js";
+
 dotenv.config({
     path: "../.env"
 });
@@ -46,3 +48,4 @@ app.listen(process.env.PUERTO, () =>{
 });
 
 app.use("/sugerencias", SugerenciaRoutes);
+app.use("/usuarios", usuarioRoutes);
