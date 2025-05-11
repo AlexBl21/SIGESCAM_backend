@@ -1,2 +1,4 @@
 node_modules
 npm-temp-fix
+
+.env
