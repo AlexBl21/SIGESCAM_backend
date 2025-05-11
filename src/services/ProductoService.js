@@ -129,6 +129,29 @@ async function eliminar(id_producto) {
     }
 }
 
+// Elimnar producto por nombre
+async function eliminarPorNombre(nombre) {
+    if (!nombre) {
+        throw new BadRequestError("El nombre del producto no puede estar vacío");
+    }
+
+    try {
+        // Busco si existe el producto
+        const producto = await buscarPorNombre(nombre);
+        if (!producto) {
+            throw new NotFoundError("El producto no existe");
+        }
+
+        // Elimino el producto
+        await productoEntidad.destroy({
+            where: { nombre: nombre }
+        });
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 // Buscar producto por id
 async function buscarPorId(id_producto) {
     if (!id_producto) {
@@ -184,6 +207,7 @@ export default {
     editar,
     activarDesactivar,
     eliminar,
+    eliminarPorNombre,
     buscarPorId,
     buscarPorNombre,
     editarCantidad

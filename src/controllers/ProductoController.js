@@ -65,6 +65,7 @@ async function activarDesactivar(req, res) {
     }
 }
 
+// Eliminar producto
 async function eliminar(req, res) {
     try {
         const id_producto = parseInt(req.params.id_producto, 10); // Convertir a entero
@@ -72,6 +73,19 @@ async function eliminar(req, res) {
             return res.status(400).json({ message: "El id_producto debe ser un número válido" });
         }
         const producto = await ProductoService.eliminar(id_producto);
+        res.status(200).json(producto);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
+// Eliminar producto por nombre
+async function eliminarPorNombre(req, res) {
+    try {
+        const nombre = req.params.nombre;
+        const producto = await ProductoService.eliminarPorNombre(nombre);
         res.status(200).json(producto);
     } catch (error) {
         res.status(error.statusCode || 500).json({
@@ -115,6 +129,7 @@ export default {
     editar,
     activarDesactivar,
     eliminar,
+    eliminarPorNombre,
     buscarPorId,
     buscarPorNombre
 };
