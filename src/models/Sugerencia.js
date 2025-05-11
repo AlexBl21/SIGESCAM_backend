@@ -7,8 +7,7 @@ const Sugerencia = db.define("sugerencia", {
     nombre_producto: { type: DataTypes.STRING(60), allownull: false}, 
     descripcion: { type: DataTypes.STRING(100), allownull: false}, 
     fecha_registro: { type: DataTypes.DATE, allowNull: false},
-    estado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false},
-    clasificada: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false}
+    estado: { type: DataTypes.STRING(15), allowNull: false},
 }, {
     timestamps: false, 
     freezeTableName: true

@@ -21,6 +21,7 @@ import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
 import usuarioRoutes from "./routes/UsuarioRoutes.js";
 import loginRoutes from "./routes/LoginRoutes.js";
 import compraRoutes from "./routes/CompraRoutes.js";
+import cors from "cors";
 
 dotenv.config({
   path: "../.env"
@@ -29,6 +30,12 @@ dotenv.config({
 const app = express();
 app.use(express.json());
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 //test conexion de la bd
 db.authenticate()

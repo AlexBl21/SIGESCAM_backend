@@ -9,7 +9,8 @@ async function registrar(nombreProducto, descripcion) {
         const sugerencia = await sugerenciaEntidad.create({
             nombre_producto: nombreProducto, 
             descripcion: descripcion, 
-            fecha_registro: new Date()
+            fecha_registro: new Date(),
+            estado: "pendiente"
         });
         return sugerencia;
     } catch (error) {
@@ -17,48 +18,17 @@ async function registrar(nombreProducto, descripcion) {
     };
 };
 
-async function listarNoClasificadas() {
+async function listar() {
     try {
-        const sugerencias=  await sugerenciaEntidad.findAll({
-            where:{
-                estado: false,
-                clasificada: false
-            }
-        });
+        const sugerencias = await sugerenciaEntidad.findAll();
+        if(!sugerencias){
+            throw new NotFoundError("No se encontraron sugerencias");
+        }
         return sugerencias;
     } catch (error) {
-        throw new InternalServerError("Error al obtener las sugerencias" + error.message);
+        throw error;
     }
 };
-
-async function listarAceptadas() {
-    try {
-        const sugerencias = await sugerenciaEntidad.findAll({
-            where: {
-                estado: true,
-                clasificada: true
-            }
-        });
-        return sugerencias;
-    } catch (error) {
-        throw new InternalServerError("Error al obtener las sugerencias" + error.message);
-    }
-};
-
-//listar rechazadas 
-async function listarRechazadas() {
-    try {
-        const sugerencias = await sugerenciaEntidad.findAll({
-            where: {
-                estado: false,
-                clasificada: true
-            }
-        });
-        return sugerencias;
-    } catch (error) {
-        throw new InternalServerError("Error al encontrar las sugerencias" + error.message);
-    }
-}
 
 //cambiar estado de una sugerencia
 async function cambiarEstado(id, estado) {
@@ -75,20 +45,4 @@ async function cambiarEstado(id, estado) {
     };
 }
 
-//cambiar estado de Clasificacion
-async function cambiarClasificacion(id, clasificacion) {
-    try{
-        const sugerencia = await sugerenciaEntidad.findByPk(id);
-        if(!sugerencia){
-            throw new NotFoundError("No se encontró la sugerencia");
-        }
-        sugerencia.clasificada = clasificacion;
-        await sugerencia.save({field: ['clasificada']});
-        return sugerencia;
-    } catch (error) {
-        throw error;
-    };
-};
-
-
-export default {registrar, listarNoClasificadas, listarAceptadas, listarRechazadas, cambiarEstado, cambiarClasificacion};
+export default {registrar, listar, cambiarEstado};

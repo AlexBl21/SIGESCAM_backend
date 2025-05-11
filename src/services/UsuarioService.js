@@ -2,10 +2,14 @@ import usuarioEntidad from "../models/Usuario.js";
 import { NotFoundError, BadRequestError, Conflict, InternalServerError } from "../errors/Errores.js";
 import rolEntidad from "../models/Rol.js";
 import rol from "../models/Rol.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+import { enviarCorreo } from "../services/EmailService.js";
 
 //registrar un Usuario 
-async function registrar(dni, nombre, email, contrasena, telefono, rol) {
-    if (!dni || !nombre || !email || !contrasena || !telefono || !rol) {
+async function registrar(dni, nombre, email, telefono, rol) {
+    if (!dni || !nombre || !email  || !telefono || !rol) {
         throw new BadRequestError("Los datos no pueder esta vacios");
     }
 
@@ -18,7 +22,7 @@ async function registrar(dni, nombre, email, contrasena, telefono, rol) {
         //busco si existe el correo
         const existe = await existeCorreo(email);
         if (existe) {
-            throw new Conflict("El correo ya existe"); s
+            throw new Conflict("El correo ya existe"); 
         }
         //busco si existe el rol
         const rolBuscado = await rolEntidad.findByPk(rol);
@@ -33,11 +37,43 @@ async function registrar(dni, nombre, email, contrasena, telefono, rol) {
             dni: dni,
             nombre: nombre,
             email: email,
-            contrasena: contrasena,
             telefono: telefono,
             //para claves foraneas deben ver en el modelo como se llama ese campo: 
             id_rol: rol
         });
+        const token = jwt.sign({ dni }, process.env.JWT_SECRET, { expiresIn: "72h" });
+        console.log(token);
+        const link = `${process.env.FRONTEND_URL}/crear-contrasena/${token}`;
+        await enviarCorreo(
+      email,
+      "Crea tu contraseña",
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+          <h2 style="color: #333;">Hola ${nombre},</h2>
+          <p style="font-size: 16px; color: #555;">
+            Gracias por registrarte en <strong>Gym Klinsmann</strong>. Para crear tu contraseña, haz clic en el siguiente botón:
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${link}" style="background-color:rgb(255, 0, 0); color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+              Crear contraseña
+            </a>
+          </div>
+          <p style="font-size: 14px; color: #888;">
+            Si el botón no funciona, también puedes copiar y pegar el siguiente enlace en tu navegador:
+          </p>
+          <p style="word-break: break-all; font-size: 14px; color:rgb(255, 0, 0);">
+            ${link}
+          </p>
+          <p style="font-size: 14px; color: #999;">
+            Este enlace expirará en 3 días.
+          </p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="font-size: 12px; color: #aaa; text-align: center;">
+            © ${new Date().getFullYear()} Gym Klinsmann. Todos los derechos reservados.
+          </p>
+        </div>
+      `
+    );
         return usuario;
     } catch (error) {
         console.log(error);
@@ -171,4 +207,16 @@ export async function actualizarCorreoElectronico(dni, nuevoEmail) {
     return usuario;
 }
 
-export default { registrar, listar, editar, cambioDeEstado, buscarPorId };
+async function actualizarContraseña(dni, contraseñaHasheada) {
+    const clienteExistente = await usuarioEntidad.findByPk(dni);
+    if (!clienteExistente) {
+      throw new Error("Cliente no encontrado");
+    }
+  
+    clienteExistente.contrasena = contraseñaHasheada;
+    await clienteExistente.save();
+    return clienteExistente;
+  };
+
+
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña };
