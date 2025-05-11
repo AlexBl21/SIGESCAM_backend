@@ -23,10 +23,18 @@ export async function obtenerHistorialCompras() {
 
 
 export async function filtrarComprasPorFecha(fechaInicio, fechaFin) {
+    const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
+    const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+
+    fechaInicioObj.setMinutes(fechaInicioObj.getMinutes() - fechaInicioObj.getTimezoneOffset());
+    fechaFinObj.setMinutes(fechaFinObj.getMinutes() - fechaFinObj.getTimezoneOffset());
+
+    console.log("Fecha Inicio: ", fechaInicioObj);
+    console.log("Fecha Fin: ", fechaFinObj);
     return await Compra.findAll({
         where: {
             fecha_compra: {
-                [Op.between]: [fechaInicio, fechaFin]
+                [Op.between]: [fechaInicioObj, fechaFinObj]
             }
         },
         include: [

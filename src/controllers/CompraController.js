@@ -1,12 +1,12 @@
-import { obtenerHistorialCompras,filtrarComprasPorFecha,filtrarComprasPorProducto } from "../services/CompraService.js";
+import { obtenerHistorialCompras, filtrarComprasPorFecha, filtrarComprasPorProducto } from "../services/CompraService.js";
 
 export async function verHistorialCompras(req, res) {
-    try {
-        const compras = await obtenerHistorialCompras();
-        res.status(200).json(compras);
-    } catch (error) {
-        res.status(500).json({ message: "Error al obtener el historial de compras" });
-    }
+  try {
+    const compras = await obtenerHistorialCompras();
+    res.status(200).json(compras);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener el historial de compras" });
+  }
 }
 
 
@@ -16,6 +16,13 @@ export async function comprasPorFecha(req, res) {
 
     if (!fechaInicio || !fechaFin) {
       return res.status(400).json({ message: "Debe proporcionar ambas fechas" });
+    }
+
+    const fechaInicioObj = new Date(fechaInicio + ' 00:00:00');
+    const fechaFinObj = new Date(fechaFin + ' 23:59:59');
+
+    if (fechaInicioObj > fechaFinObj) {
+      return res.status(400).json({ message: "La fecha de inicio no puede ser mayor a la fecha de fin" });
     }
 
     const compras = await filtrarComprasPorFecha(fechaInicio, fechaFin);

@@ -43,5 +43,5 @@ app.listen(process.env.PUERTO, () => {
 app.use("/sugerencias", SugerenciaRoutes);
 app.use("/usuarios", usuarioRoutes);
 app.use("/login", loginRoutes);
-app.use("/compra", compraRoutes);
+app.use("/compras", compraRoutes);
 app.use("/recuperar-contrasena", recuperarContrasenaRoutes);
