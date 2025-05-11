@@ -142,19 +142,11 @@ async function buscarPorId(dni) {
     return usuario;
 }
 
-export async function buscarPorDNI(dni) {
-    const usuario = await usuarioEntidad.findByPk(dni);
-    if (!usuario) {
-        throw new NotFoundError("Usuario no encontrado.");
-    }
-    return usuario;
-}
-
 export async function actualizarCorreoElectronico(dni, nuevoEmail) {
     if (!nuevoEmail || nuevoEmail.trim() === "") {
         throw new BadRequestError("El correo electrónico no puede estar vacío.");
     }
-    const usuario = await buscarPorDNI(dni);
+    const usuario = await buscarPorId(dni);
 
     if (usuario.email === nuevoEmail) {
         throw new BadRequestError("El nuevo correo electrónico es igual al actual.");
