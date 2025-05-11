@@ -59,4 +59,36 @@ async function listarRechazadas() {
         throw new InternalServerError("Error al encontrar las sugerencias" + error.message);
     }
 }
-export default {registrar, listarNoClasificadas, listarAceptadas, listarRechazadas};
+
+//cambiar estado de una sugerencia
+async function cambiarEstado(id, estado) {
+    try {
+        const sugerencia = await sugerenciaEntidad.findByPk(id);
+        if(!sugerencia){
+            throw new NotFoundError("No se encontró la sugerencia");
+        }
+        sugerencia.estado = estado;
+        await sugerencia.save({field: ['estado']});
+        return sugerencia;
+    } catch (error) {
+        throw error;
+    };
+}
+
+//cambiar estado de Clasificacion
+async function cambiarClasificacion(id, clasificacion) {
+    try{
+        const sugerencia = await sugerenciaEntidad.findByPk(id);
+        if(!sugerencia){
+            throw new NotFoundError("No se encontró la sugerencia");
+        }
+        sugerencia.clasificada = clasificacion;
+        await sugerencia.save({field: ['clasificada']});
+        return sugerencia;
+    } catch (error) {
+        throw error;
+    };
+};
+
+
+export default {registrar, listarNoClasificadas, listarAceptadas, listarRechazadas, cambiarEstado, cambiarClasificacion};
