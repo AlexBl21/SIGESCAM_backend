@@ -55,9 +55,44 @@ async function listar() {
     return productos;
 }
 
+// Listar productos resumido
+async function listarResumido() {
+    const productos = await productoEntidad.findAll({
+        attributes: ['nombre', 'cantidad', 'precio_venta'],
+        include: [{
+            model: categoriaEntidad,
+            attributes: ['nombre']
+        }]
+    });
+    return productos.map(producto => ({
+        nombre: producto.nombre,
+        id_categoria: producto.id_Categoria,
+        cantidad: producto.cantidad,
+        precio_venta: producto.precio_venta
+    }));
+}
+
+// Listar productos resumido solo activos
+async function listarResumidoActivos() {
+    const productos = await productoEntidad.findAll({
+        attributes: ['nombre', 'cantidad', 'precio_venta'],
+        where: { activo: true },
+        include: [{
+            model: categoriaEntidad,
+            attributes: ['nombre']
+        }]
+    });
+    return productos.map(producto => ({
+        nombre: producto.nombre,
+        id_categoria: producto.id_Categoria,
+        cantidad: producto.cantidad,
+        precio_venta: producto.precio_venta
+    }));
+}
+
 // editar producto
-async function editar(id_producto, nombre, precio_compra, precio_venta, cantidad, id_categoria) {
-    if (!id_producto || !nombre || !precio_compra || !precio_venta || !cantidad || !id_categoria) {
+async function editar(id_producto, nombre, precio_venta, cantidad, id_categoria) {
+    if (!id_producto || !nombre || !precio_venta || !cantidad || !id_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
     }
 
@@ -71,7 +106,6 @@ async function editar(id_producto, nombre, precio_compra, precio_venta, cantidad
         // Actualizo el producto con los nuevos datos
         const producto = await productoEntidad.update({
             nombre: nombre,
-            precio_compra: precio_compra,
             precio_venta: precio_venta,
             cantidad: cantidad,
             id_categoria: id_categoria,
@@ -106,7 +140,27 @@ async function activarDesactivar(id_producto, activo) {
     }
 }
 
-// Eliminar producto
+// Activar o desactivar un producto por nombre
+async function activarDesactivarPorNombre(nombre, activo) {
+    if (!nombre || activo === undefined) {
+        throw new BadRequestError("Los datos no pueden estar vacíos");
+    }
+
+    try {
+        // Actualizo el estado del producto
+        const producto = await productoEntidad.update({
+            activo: activo
+        }, {
+            where: { nombre: nombre }
+        });
+        return producto;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+// Eliminar producto por id
 async function eliminar(id_producto) {
     if (!id_producto) {
         throw new BadRequestError("El id del producto no puede estar vacío");
@@ -204,8 +258,11 @@ export default {
     registrar,
     existeProducto,
     listar,
+    listarResumido,
+    listarResumidoActivos,
     editar,
     activarDesactivar,
+    activarDesactivarPorNombre,
     eliminar,
     eliminarPorNombre,
     buscarPorId,

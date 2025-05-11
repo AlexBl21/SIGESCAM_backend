@@ -28,6 +28,30 @@ async function listar(req, res) {
     }
 }
 
+// Listar productos resumido
+async function listarResumido(req, res) {
+    try {
+        const productos = await ProductoService.listarResumido();
+        res.status(200).json(productos);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
+// Listar productos resumido solo activos
+async function listarResumidoActivos(req, res) {
+    try {
+        const productos = await ProductoService.listarResumidoActivos();
+        res.status(200).json(productos);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
 async function editar(req, res) {
     try {
         const id_producto = parseInt(req.params.id_producto, 10); // Convertir a entero
@@ -37,7 +61,6 @@ async function editar(req, res) {
         const producto = await ProductoService.editar(
             id_producto,
             req.body.nombre,
-            req.body.precio_compra,
             req.body.precio_venta,
             req.body.cantidad,
             req.body.id_categoria
@@ -55,6 +78,22 @@ async function activarDesactivar(req, res) {
         const { id_producto } = req.params;
         const producto = await ProductoService.activarDesactivar(
             id_producto,
+            req.body.activo
+        );
+        res.status(200).json(producto);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
+// Activar o desactivar producto por nombre
+async function activarDesactivarPorNombre(req, res) {
+    try {
+        const nombre = req.params.nombre;
+        const producto = await ProductoService.activarDesactivarPorNombre(
+            nombre,
             req.body.activo
         );
         res.status(200).json(producto);
@@ -126,8 +165,11 @@ async function buscarPorNombre(req, res) {
 export default {
     registrar,
     listar,
+    listarResumido,
+    listarResumidoActivos,
     editar,
     activarDesactivar,
+    activarDesactivarPorNombre,
     eliminar,
     eliminarPorNombre,
     buscarPorId,
