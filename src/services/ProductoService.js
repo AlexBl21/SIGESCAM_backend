@@ -157,6 +157,26 @@ async function buscarPorNombre(nombre) {
     return producto;
 }
 
+// editar cantidad
+export async function editarCantidad(id_producto, cantidad) {
+    if (!id_producto || !cantidad) {
+        throw new BadRequestError("Los datos no pueden estar vacíos");
+    }
+
+    try {
+        // Actualizo la cantidad del producto
+        const producto = await productoEntidad.update({
+            cantidad: cantidad
+        }, {
+            where: { id_producto: id_producto }
+        });
+        return producto;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 export default {
     registrar,
     existeProducto,
@@ -165,5 +185,6 @@ export default {
     activarDesactivar,
     eliminar,
     buscarPorId,
-    buscarPorNombre
+    buscarPorNombre,
+    editarCantidad
 };

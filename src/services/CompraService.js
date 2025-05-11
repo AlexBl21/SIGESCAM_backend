@@ -2,38 +2,50 @@ import e from "express";
 import Compra from "../models/Compra.js";
 import Producto from "../models/Producto.js";
 import Usuario from "../models/Usuario.js";
+import { BadRequestError, NotFoundError } from "../errors/Errores.js";
+import { editarCantidad } from "./ProductoService.js";
 import { Op } from "sequelize";
 
-export async function registrarCompra(dni_usuario, id_producto, cantidad_agregar, precio) {
-    // Validar que los parámetros no sean nulos o inválidos
-    if (!dni_usuario || !id_producto || !cantidad_agregar || !precio) {
-        throw new Error("Todos los campos son obligatorios.");
+export async function registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, id_categoria, fecha_compra) {
+    // Validar que los parámetros obligatorios no sean nulos o inválidos
+    if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !id_categoria || !fecha_compra) {
+        throw new BadRequestError("Todos los campos son obligatorios.");
     }
 
     if (cantidad_agregar <= 0) {
-        throw new Error("La cantidad debe ser mayor a cero.");
+        throw new BadRequestError("La cantidad debe ser mayor a cero.");
     }
 
     // Verificar si el usuario existe
     const usuario = await Usuario.findOne({ where: { dni: dni_usuario } });
     if (!usuario) {
-        throw new Error("El usuario no existe.");
+        throw new NotFoundError("El usuario no existe.");
     }
 
-    // Verificar si el producto existe
-    const producto = await Producto.findByPk(id_producto);
-    if (!producto) {
-        throw new Error("El producto no existe.");
+    // Buscar el producto por nombre
+    let producto = await Producto.findOne({ where: { nombre: nombre_producto } });
+
+    if (producto) {
+        // Si el producto existe, actualizar la cantidad utilizando editarCantidad
+        await editarCantidad(producto.id_producto, producto.cantidad + cantidad_agregar);
+    } else {
+        // Si el producto no existe, registrarlo
+        producto = await Producto.create({
+            nombre: nombre_producto,
+            precio_compra,
+            precio_venta,
+            cantidad: cantidad_agregar,
+            id_categoria
+        });
     }
 
     // Registrar la compra
-    const fecha_compra = new Date();
     const compra = await Compra.create({
-        dni_usuario,
-        id_producto,
         cantidad_agregar,
-        precio,
-        fecha_compra
+        precio: precio_compra,
+        fecha_compra: new Date(fecha_compra),
+        dni_usuario,
+        id_producto: producto.id_producto // Usar el ID del producto creado o actualizado
     });
 
     return compra;
