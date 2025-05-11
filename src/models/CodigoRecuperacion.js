@@ -19,6 +19,10 @@ const CodigoRecuperacion = db.define("codigo_recuperacion", {
     expiracion: {
         type: DataTypes.DATE,
         allowNull: false
+    },
+    intentos: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
     }
 }, {
     timestamps: false,

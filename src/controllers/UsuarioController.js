@@ -1,6 +1,6 @@
 import Sugerencia from "../models/Sugerencia.js";
 import usuarioService from "../services/UsuarioService.js";
-import { actualizarCorreoElectronico, buscarPorDNI } from "../services/UsuarioService.js";
+import { actualizarCorreoElectronico } from "../services/UsuarioService.js";
 
 async function registrar(req, res) {
     try {
@@ -76,20 +76,6 @@ async function buscarPorId(req, res) {
     }
 }
 
-export async function obtenerUsuarioPorDNI(req, res) {
-    try {
-        const { dni } = req.params;
-        const usuario = await buscarPorDNI(dni);
-        return res.status(200).json(usuario);
-    } catch (error) {
-        if (error.name === "NotFoundError") {
-            return res.status(404).json({ message: error.message });
-        }
-        return res.status(500).json({ message: "Error al buscar el usuario." });
-    }
-}
-
-
 export async function editarCorreo(req, res) {
     try {
         const { dni } = req.params;
@@ -100,7 +86,7 @@ export async function editarCorreo(req, res) {
         return res.status(200).json({
             message: "Correo electrónico actualizado exitosamente",
             usuario: {
-                DNI: usuarioActualizado.dni,
+                dni: usuarioActualizado.dni,
                 nombre: usuarioActualizado.nombre,
                 email: usuarioActualizado.email,
             },

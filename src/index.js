@@ -21,6 +21,8 @@ import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
 import usuarioRoutes from "./routes/UsuarioRoutes.js";
 import loginRoutes from "./routes/LoginRoutes.js";
 import compraRoutes from "./routes/CompraRoutes.js";
+import productoRoutes from "./routes/ProductoRoutes.js";
+import recuperarContrasenaRoutes from "./routes/RecuperarContrasenaRoutes.js";
 import cors from "cors";
 
 dotenv.config({
@@ -49,4 +51,6 @@ app.listen(process.env.PUERTO, () => {
 app.use("/sugerencias", SugerenciaRoutes);
 app.use("/usuarios", usuarioRoutes);
 app.use("/login", loginRoutes);
-app.use("/compra", compraRoutes);
+app.use("/productos", productoRoutes);
+app.use("/compras", compraRoutes);
+app.use("/recuperar-contrasena", recuperarContrasenaRoutes);

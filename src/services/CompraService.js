@@ -1,7 +1,55 @@
+import e from "express";
 import Compra from "../models/Compra.js";
 import Producto from "../models/Producto.js";
 import Usuario from "../models/Usuario.js";
+import { BadRequestError, NotFoundError } from "../errors/Errores.js";
+import { editarCantidad } from "./ProductoService.js";
 import { Op } from "sequelize";
+
+export async function registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, id_categoria, fecha_compra) {
+    // Validar que los parámetros obligatorios no sean nulos o inválidos
+    if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !id_categoria || !fecha_compra) {
+        throw new BadRequestError("Todos los campos son obligatorios.");
+    }
+
+    if (cantidad_agregar <= 0) {
+        throw new BadRequestError("La cantidad debe ser mayor a cero.");
+    }
+
+    // Verificar si el usuario existe
+    const usuario = await Usuario.findOne({ where: { dni: dni_usuario } });
+    if (!usuario) {
+        throw new NotFoundError("El usuario no existe.");
+    }
+
+    // Buscar el producto por nombre
+    let producto = await Producto.findOne({ where: { nombre: nombre_producto } });
+
+    if (producto) {
+        // Si el producto existe, actualizar la cantidad utilizando editarCantidad
+        await editarCantidad(producto.id_producto, producto.cantidad + cantidad_agregar);
+    } else {
+        // Si el producto no existe, registrarlo
+        producto = await Producto.create({
+            nombre: nombre_producto,
+            precio_compra,
+            precio_venta,
+            cantidad: cantidad_agregar,
+            id_categoria
+        });
+    }
+
+    // Registrar la compra
+    const compra = await Compra.create({
+        cantidad_agregar,
+        precio: precio_compra,
+        fecha_compra: new Date(fecha_compra),
+        dni_usuario,
+        id_producto: producto.id_producto // Usar el ID del producto creado o actualizado
+    });
+
+    return compra;
+}
 
 export async function obtenerHistorialCompras() {
     const compras = await Compra.findAll({
@@ -23,10 +71,16 @@ export async function obtenerHistorialCompras() {
 
 
 export async function filtrarComprasPorFecha(fechaInicio, fechaFin) {
+    const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
+    const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+
+    fechaInicioObj.setMinutes(fechaInicioObj.getMinutes() - fechaInicioObj.getTimezoneOffset());
+    fechaFinObj.setMinutes(fechaFinObj.getMinutes() - fechaFinObj.getTimezoneOffset());
+
     return await Compra.findAll({
         where: {
             fecha_compra: {
-                [Op.between]: [fechaInicio, fechaFin]
+                [Op.between]: [fechaInicioObj, fechaFinObj]
             }
         },
         include: [
