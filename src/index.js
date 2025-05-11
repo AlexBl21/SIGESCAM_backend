@@ -23,7 +23,7 @@ import loginRoutes from "./routes/LoginRoutes.js";
 import compraRoutes from "./routes/CompraRoutes.js";
 
 dotenv.config({
-    path: "../.env"
+  path: "../.env"
 });
 
 const app = express();
@@ -35,21 +35,8 @@ db.authenticate()
   .then(() => console.log("Databse connection successful"))
   .catch((error) => console.log("Connection error: ", error));
 
-//funcion para la creación de las tablas 
-
-async function main(){
-    try{
-        await db.sync({ alter: true });
-        console.log("Tablas creadas exitosamente B)")
-    }catch(error){
-      console.log(error.message);
-    }
-  }
-
-  main()
-
-app.listen(process.env.PUERTO, () =>{
-    console.log(`escuchando en http://localhost:${process.env.PUERTO}`);
+app.listen(process.env.PUERTO, () => {
+  console.log(`escuchando en http://localhost:${process.env.PUERTO}`);
 });
 
 app.use("/sugerencias", SugerenciaRoutes);
