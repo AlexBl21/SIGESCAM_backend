@@ -1,4 +1,4 @@
-import { obtenerHistorialCompras, filtrarComprasPorFecha, filtrarComprasPorProducto, registrar } from "../services/CompraService.js";
+import { obtenerHistorialCompras, filtrarComprasPorFecha, filtrarComprasPorProducto, registrar, eliminar } from "../services/CompraService.js";
 
 export async function verHistorialCompras(req, res) {
   try {
@@ -63,6 +63,25 @@ export async function registrarCompra(req, res) {
   } catch (error) {
     res.status(500).json({ 
       message: "Error al registrar la compra", 
+      error: error.message, 
+      stack: error.stack 
+    });
+  }
+}
+
+export async function eliminarCompra(req, res) {
+  try {
+    const { id_compra } = req.params;
+
+    if (!id_compra) {
+      return res.status(400).json({ message: "Debe proporcionar el ID de la compra" });
+    }
+
+    const resultado = await eliminar(id_compra);
+    res.status(200).json(resultado);
+  } catch (error) {
+    res.status(500).json({ 
+      message: "Error al eliminar la compra", 
       error: error.message, 
       stack: error.stack 
     });
