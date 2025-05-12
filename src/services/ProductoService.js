@@ -2,6 +2,7 @@ import productoEntidad from "../models/Producto.js";
 import { NotFoundError, BadRequestError, Conflict, InternalServerError } from "../errors/Errores.js";
 import categoriaEntidad from "../models/Categoria.js";
 import { existeCategoria } from "./CategoriaService.js";
+import { Op } from "sequelize";
 
 //Registrar un Producto
 async function registrar(nombre, precio_compra, precio_venta, cantidad, id_categoria) {
@@ -58,7 +59,7 @@ async function listar() {
 // Listar productos resumido
 async function listarResumido() {
     const productos = await productoEntidad.findAll({
-        attributes: ['nombre', 'cantidad', 'precio_venta'],
+        attributes: ['nombre', 'cantidad', 'precio_venta', 'id_categoria'],
         include: [{
             model: categoriaEntidad,
             attributes: ['nombre']
@@ -66,7 +67,7 @@ async function listarResumido() {
     });
     return productos.map(producto => ({
         nombre: producto.nombre,
-        id_categoria: producto.id_Categoria,
+        id_categoria: producto.id_categoria,
         cantidad: producto.cantidad,
         precio_venta: producto.precio_venta
     }));
@@ -75,7 +76,7 @@ async function listarResumido() {
 // Listar productos resumido solo activos
 async function listarResumidoActivos() {
     const productos = await productoEntidad.findAll({
-        attributes: ['nombre', 'cantidad', 'precio_venta'],
+        attributes: ['nombre', 'cantidad', 'precio_venta', 'id_categoria'],
         where: { activo: true },
         include: [{
             model: categoriaEntidad,
@@ -84,7 +85,7 @@ async function listarResumidoActivos() {
     });
     return productos.map(producto => ({
         nombre: producto.nombre,
-        id_categoria: producto.id_Categoria,
+        id_categoria: producto.id_categoria,
         cantidad: producto.cantidad,
         precio_venta: producto.precio_venta
     }));
@@ -271,6 +272,47 @@ async function filtrarPorCategoria(id_categoria) {
     }
 }
 
+// Filtrado de productos activos por cantidad, categoria y precio con múltiples filtros
+async function filtrarPorCantidadCategoriaNombre(cantidad, id_categoria, precio) {
+    try {
+        const whereClauses = []; // Lista de condiciones WHERE
+
+        // Solo productos activos
+        whereClauses.push({ activo: true });
+
+        if (cantidad !== null && cantidad !== undefined) {
+            whereClauses.push({ cantidad: { [Op.lte]: cantidad } }); // Productos con cantidad menor o igual
+        }
+
+        if (id_categoria !== null && id_categoria !== undefined) {
+            whereClauses.push({ id_categoria: id_categoria }); // Productos de una categoría específica
+        }
+
+        if (precio !== null && precio !== undefined) {
+            whereClauses.push({ precio_venta: { [Op.lte]: parseFloat(precio) } }); // Productos con precio menor o igual
+        }
+
+        const productos = await productoEntidad.findAll({
+            attributes: ['nombre', 'cantidad', 'precio_venta', 'id_categoria'],
+            where: { [Op.and]: whereClauses }, // Combino todas las condiciones con AND
+            include: [{
+                model: categoriaEntidad,
+                attributes: ['nombre']
+            }]
+        });
+
+        return productos.map(producto => ({
+            nombre: producto.nombre,
+            id_categoria: producto.id_categoria,
+            cantidad: producto.cantidad,
+            precio_venta: producto.precio_venta
+        }));
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 export default {
     registrar,
     existeProducto,
@@ -285,5 +327,6 @@ export default {
     buscarPorId,
     buscarPorNombre,
     editarCantidad,
-    filtrarPorCategoria
+    filtrarPorCategoria,
+    filtrarPorCantidadCategoriaNombre
 };

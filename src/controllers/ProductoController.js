@@ -178,6 +178,19 @@ async function filtrarPorCategoria(req, res) {
     }
 }
 
+// Filtrar productos por cantidad, categoria y nombre
+async function filtrarPorCantidadCategoriaNombre(req, res) {
+    try {
+        const { cantidad, id_categoria, nombre } = req.query;
+        const productos = await ProductoService.filtrarPorCantidadCategoriaNombre(cantidad, id_categoria, nombre);
+        res.status(200).json(productos);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
 export default {
     registrar,
     listar,
@@ -190,5 +203,6 @@ export default {
     eliminarPorNombre,
     buscarPorId,
     buscarPorNombre,
-    filtrarPorCategoria
+    filtrarPorCategoria,
+    filtrarPorCantidadCategoriaNombre
 };
