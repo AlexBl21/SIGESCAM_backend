@@ -9,6 +9,7 @@ router.get("/", ProductoController.listar);
 router.get("/resumido", ProductoController.listarResumido);
 router.get("/resumido/activos", ProductoController.listarResumidoActivos);
 router.put("/:id_producto", ProductoController.editar);
+router.put("/nombre/:nombre", ProductoController.editarPorNombre);
 router.patch("/:id_producto", ProductoController.activarDesactivar);
 router.patch("/nombre/:nombre", ProductoController.activarDesactivarPorNombre);
 router.delete("/:id_producto", ProductoController.eliminar);

@@ -121,6 +121,37 @@ async function editar(id_producto, nombre, precio_venta, cantidad, id_categoria)
     }
 }
 
+// Editar producto por nombre
+async function editarPorNombre(nombre, nuevoNombre, precio_venta, cantidad, id_categoria) {
+    if (!nombre || !nuevoNombre || !precio_venta || !cantidad || !id_categoria) {
+        throw new BadRequestError("Los datos no pueden estar vacíos");
+    }
+
+    try {
+        // Busco si existe la categoría
+        const categoriaExistente = await existeCategoria(id_categoria);
+        if (!categoriaExistente) {
+            throw new NotFoundError("La categoría no existe");
+        }
+
+        // Actualizo el producto con los nuevos datos
+        const producto = await productoEntidad.update({
+            nombre: nuevoNombre,
+            precio_venta: precio_venta,
+            cantidad: cantidad,
+            id_categoria: id_categoria,
+            activo: true // Representado como 1 en la base de datos
+        }, {
+            where: { nombre: nombre }
+        });
+        return producto;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+
 // Activar o desactivar un producto
 async function activarDesactivar(id_producto, activo) {
     if (!id_producto || activo === undefined) {
@@ -366,6 +397,7 @@ export default {
     listarResumido,
     listarResumidoActivos,
     editar,
+    editarPorNombre,
     activarDesactivar,
     activarDesactivarPorNombre,
     eliminar,

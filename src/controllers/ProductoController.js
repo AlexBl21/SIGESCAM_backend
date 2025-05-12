@@ -73,6 +73,32 @@ async function editar(req, res) {
     }
 }
 
+// Editar producto por nombre
+async function editarPorNombre(req, res) {
+    try {
+        const { nombre } = req.params;
+        const { nuevoNombre, precio_venta, cantidad, id_categoria } = req.body;
+
+        if (!nombre || !nuevoNombre || !precio_venta || !cantidad || !id_categoria) {
+            return res.status(400).json({ message: "Los datos no pueden estar vacíos" });
+        }
+
+        const producto = await ProductoService.editarPorNombre(
+            nombre,
+            nuevoNombre,
+            precio_venta,
+            cantidad,
+            id_categoria
+        );
+
+        res.status(200).json(producto);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
 async function activarDesactivar(req, res) {
     try {
         const { id_producto } = req.params;
@@ -226,6 +252,7 @@ export default {
     listarResumido,
     listarResumidoActivos,
     editar,
+    editarPorNombre,
     activarDesactivar,
     activarDesactivarPorNombre,
     eliminar,
