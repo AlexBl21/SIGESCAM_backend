@@ -16,6 +16,6 @@ router.delete("/nombre/:nombre", ProductoController.eliminarPorNombre);
 router.get("/id/:id_producto", ProductoController.buscarPorId);
 router.get("/nombre/:nombre", ProductoController.buscarPorNombre);
 router.get("/categoria/:id_categoria", ProductoController.filtrarPorCategoria);
-router.get("/cantidad_categoria_nombre", ProductoController.filtrarPorCantidadCategoriaNombre);
+router.get("/cantidad_categoria_precio", ProductoController.filtrarPorCantidadCategoriaPrecio);
 
 export default router;

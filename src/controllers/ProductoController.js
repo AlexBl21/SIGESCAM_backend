@@ -178,11 +178,11 @@ async function filtrarPorCategoria(req, res) {
     }
 }
 
-// Filtrar productos por cantidad, categoria y nombre
-async function filtrarPorCantidadCategoriaNombre(req, res) {
+// Filtrar productos por cantidad, categoria y precio
+async function filtrarPorCantidadCategoriaPrecio(req, res) {
     try {
-        const { cantidad, id_categoria, nombre } = req.query;
-        const productos = await ProductoService.filtrarPorCantidadCategoriaNombre(cantidad, id_categoria, nombre);
+        const { cantidad, id_categoria, precio } = req.query;
+        const productos = await ProductoService.filtrarPorCantidadCategoriaPrecio(cantidad, id_categoria, precio);
         res.status(200).json(productos);
     } catch (error) {
         res.status(error.statusCode || 500).json({
@@ -204,5 +204,5 @@ export default {
     buscarPorId,
     buscarPorNombre,
     filtrarPorCategoria,
-    filtrarPorCantidadCategoriaNombre
+    filtrarPorCantidadCategoriaPrecio
 };

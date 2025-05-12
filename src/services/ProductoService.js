@@ -273,7 +273,7 @@ async function filtrarPorCategoria(id_categoria) {
 }
 
 // Filtrado de productos activos por cantidad, categoria y precio con múltiples filtros
-async function filtrarPorCantidadCategoriaNombre(cantidad, id_categoria, precio) {
+async function filtrarPorCantidadCategoriaPrecio(cantidad, id_categoria, precio) {
     try {
         const whereClauses = []; // Lista de condiciones WHERE
 
@@ -288,8 +288,8 @@ async function filtrarPorCantidadCategoriaNombre(cantidad, id_categoria, precio)
             whereClauses.push({ id_categoria: id_categoria }); // Productos de una categoría específica
         }
 
-        if (precio !== null && precio !== undefined) {
-            whereClauses.push({ precio_venta: { [Op.lte]: parseFloat(precio) } }); // Productos con precio menor o igual
+        if (precio !== null && precio !== undefined && !isNaN(precio)) {
+            whereClauses.push({ precio_venta: { [Op.lte]: Number(precio) } }); // Productos con precio menor o igual
         }
 
         const productos = await productoEntidad.findAll({
@@ -328,5 +328,5 @@ export default {
     buscarPorNombre,
     editarCantidad,
     filtrarPorCategoria,
-    filtrarPorCantidadCategoriaNombre
+    filtrarPorCantidadCategoriaPrecio
 };
