@@ -17,7 +17,8 @@ export async function login(req, res) {
             usuario: {
                 dni: usuario.dni,
                 nombre: usuario.nombre,
-                rol: role
+                rol: role,
+                email: usuario.email,
             }
         });
     } catch (error) {

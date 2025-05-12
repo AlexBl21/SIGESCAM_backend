@@ -66,7 +66,7 @@ export async function obtenerHistorialCompras() {
         order: [['fecha_compra', 'DESC']]
     });
 
-    return compras;
+    return calcularTotales(compras);
 }
 
 
@@ -77,7 +77,7 @@ export async function filtrarComprasPorFecha(fechaInicio, fechaFin) {
     fechaInicioObj.setMinutes(fechaInicioObj.getMinutes() - fechaInicioObj.getTimezoneOffset());
     fechaFinObj.setMinutes(fechaFinObj.getMinutes() - fechaFinObj.getTimezoneOffset());
 
-    return await Compra.findAll({
+    const compras = await Compra.findAll({
         where: {
             fecha_compra: {
                 [Op.between]: [fechaInicioObj, fechaFinObj]
@@ -95,11 +95,13 @@ export async function filtrarComprasPorFecha(fechaInicio, fechaFin) {
         ],
         order: [['fecha_compra', 'DESC']]
     });
+
+    return calcularTotales(compras);
 }
 
 
 export async function filtrarComprasPorProducto(nombreProducto) {
-    return await Compra.findAll({
+    const compras = await Compra.findAll({
         include: [
             {
                 model: Producto,
@@ -116,4 +118,25 @@ export async function filtrarComprasPorProducto(nombreProducto) {
             }
         ]
     });
+
+    return calcularTotales(compras);
+}
+
+function calcularTotales(compras) {
+    let totalGeneral = 0;
+
+    const comprasConTotales = compras.map(compra => {
+        const total_compra = compra.precio * compra.cantidad_agregar;
+        totalGeneral += total_compra;
+
+        return {
+            ...compra.toJSON(),
+            total_compra
+        };
+    });
+
+    return {
+        totalGeneral,
+        compras: comprasConTotales
+    };
 }
