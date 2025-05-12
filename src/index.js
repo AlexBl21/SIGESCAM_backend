@@ -21,6 +21,7 @@ import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
 import usuarioRoutes from "./routes/UsuarioRoutes.js";
 import loginRoutes from "./routes/LoginRoutes.js";
 import compraRoutes from "./routes/CompraRoutes.js";
+import CategoriaRoutes from "./routes/CategoriaRoutes.js";
 import productoRoutes from "./routes/ProductoRoutes.js";
 import recuperarContrasenaRoutes from "./routes/RecuperarContrasenaRoutes.js";
 import cors from "cors";
@@ -38,6 +39,8 @@ app.use(
     origin: "*",
   })
 );
+
+app.use("/categorias", CategoriaRoutes);
 
 //test conexion de la bd
 db.authenticate()
