@@ -162,6 +162,22 @@ async function buscarPorNombre(req, res) {
     }
 }
 
+// Filtrar productos por categoria
+async function filtrarPorCategoria(req, res) {
+    try {
+        const id_categoria = req.params.id_categoria; // Obtener el texto de la categoría
+        if (typeof id_categoria !== "string" || id_categoria.trim() === "") {
+            return res.status(400).json({ message: "El id_categoria debe ser un texto válido" });
+        }
+        const productos = await ProductoService.filtrarPorCategoria(id_categoria);
+        res.status(200).json(productos);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
 export default {
     registrar,
     listar,
@@ -173,5 +189,6 @@ export default {
     eliminar,
     eliminarPorNombre,
     buscarPorId,
-    buscarPorNombre
+    buscarPorNombre,
+    filtrarPorCategoria
 };

@@ -254,6 +254,23 @@ export async function editarCantidad(id_producto, cantidad) {
     }
 }
 
+// Filtrar productos por categoria
+async function filtrarPorCategoria(id_categoria) {
+    if (!id_categoria) {
+        throw new BadRequestError("El id de la categoría no puede estar vacío");
+    }
+
+    try {
+        const productos = await productoEntidad.findAll({
+            where: { id_categoria: id_categoria }
+        });
+        return productos;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 export default {
     registrar,
     existeProducto,
@@ -267,5 +284,6 @@ export default {
     eliminarPorNombre,
     buscarPorId,
     buscarPorNombre,
-    editarCantidad
+    editarCantidad,
+    filtrarPorCategoria
 };
