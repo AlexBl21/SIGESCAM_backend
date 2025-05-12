@@ -235,6 +235,52 @@ async function buscarPorNombre(nombre) {
     return producto;
 }
 
+// Buscar producto por nombre parecido
+async function buscarPorNombreParecido(nombre) {
+    if (!nombre) {
+        throw new BadRequestError("El nombre del producto no puede estar vacío");
+    }
+
+    try {
+        const productos = await productoEntidad.findAll({
+            where: {
+                nombre: {
+                    [Op.like]: `%${nombre}%` // Busca nombres que contengan la cadena proporcionada (sensible a mayúsculas)
+                }
+            },
+            include: [{
+                model: categoriaEntidad,
+                attributes: ['nombre']
+            }]
+        });
+
+        return productos.map(producto => ({
+            nombre: producto.nombre,
+            id_categoria: producto.id_categoria,
+            cantidad: producto.cantidad,
+            precio_venta: producto.precio_venta
+        }));
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+// Obtener cantidad de un producto por su nombre
+async function obtenerCantidadPorNombre(nombre) {
+    if (!nombre) {
+        throw new BadRequestError("El nombre del producto no puede estar vacío");
+    }
+
+    const producto = await productoEntidad.findOne({
+        where: { nombre: nombre }
+    });
+    if (!producto) {
+        throw new NotFoundError("El producto no existe");
+    }
+    return producto.cantidad;
+}
+
 // editar cantidad
 export async function editarCantidad(id_producto, cantidad) {
     if (!id_producto || !cantidad) {
@@ -326,6 +372,8 @@ export default {
     eliminarPorNombre,
     buscarPorId,
     buscarPorNombre,
+    buscarPorNombreParecido,
+    obtenerCantidadPorNombre,
     editarCantidad,
     filtrarPorCategoria,
     filtrarPorCantidadCategoriaPrecio
