@@ -266,7 +266,7 @@ async function buscarPorNombre(nombre) {
     return producto;
 }
 
-// Buscar producto por nombre parecido
+// Buscar producto por nombre parecido solo activos
 async function buscarPorNombreParecido(nombre) {
     if (!nombre) {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
@@ -277,7 +277,8 @@ async function buscarPorNombreParecido(nombre) {
             where: {
                 nombre: {
                     [Op.like]: `%${nombre}%` // Busca nombres que contengan la cadena proporcionada (sensible a mayúsculas)
-                }
+                },
+                activo: true // Solo productos activos
             },
             include: [{
                 model: categoriaEntidad,
