@@ -7,48 +7,109 @@ import { editarCantidad } from "./ProductoService.js";
 import { Op } from "sequelize";
 
 export async function registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, id_categoria, fecha_compra) {
-    // Validar que los parámetros obligatorios no sean nulos o inválidos
-    if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !id_categoria || !fecha_compra) {
-        throw new BadRequestError("Todos los campos son obligatorios.");
+    const transaction = await Compra.sequelize.transaction(); // Iniciar una transacción
+
+    try {
+        // Validar que los parámetros obligatorios no sean nulos o inválidos
+        if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !id_categoria || !fecha_compra) {
+            throw new BadRequestError("Todos los campos son obligatorios.");
+        }
+
+        if (cantidad_agregar <= 0) {
+            throw new BadRequestError("La cantidad debe ser mayor a cero.");
+        }
+
+        // Verificar si el usuario existe
+        const usuario = await Usuario.findOne({ where: { dni: dni_usuario }, transaction });
+        if (!usuario) {
+            throw new NotFoundError("El usuario no existe.");
+        }
+
+        // Buscar el producto por nombre
+        let producto = await Producto.findOne({ where: { nombre: nombre_producto }, transaction });
+
+        if (producto) {
+            // Si el producto está desactivado, activarlo y establecer la cantidad inicial
+            if (!producto.activo) {
+                await producto.update({ activo: true, cantidad: cantidad_agregar }, { transaction });
+            } else {
+                // Si el producto está activo, actualizar la cantidad utilizando editarCantidad
+                await editarCantidad(producto.id_producto, producto.cantidad + cantidad_agregar, transaction);
+            }
+
+            // Actualizar el precio de compra y venta al último agregado
+            await producto.update({ precio_compra, precio_venta }, { transaction });
+        } else {
+            // Si el producto no existe, registrarlo
+            producto = await Producto.create({
+                nombre: nombre_producto,
+                precio_compra,
+                precio_venta,
+                cantidad: cantidad_agregar,
+                id_categoria,
+                activo: true
+            }, { transaction });
+        }
+
+        // Registrar la compra
+        const compra = await Compra.create({
+            cantidad_agregar,
+            precio: precio_compra,
+            fecha_compra: new Date(fecha_compra),
+            dni_usuario,
+            id_producto: producto.id_producto // Usar el ID del producto creado o actualizado
+        }, { transaction });
+
+        await transaction.commit(); // Confirmar la transacción
+        return compra;
+    } catch (error) {
+        await transaction.rollback(); // Revertir los cambios si ocurre un error
+        throw error;
     }
+}
 
-    if (cantidad_agregar <= 0) {
-        throw new BadRequestError("La cantidad debe ser mayor a cero.");
+export async function eliminar(id_compra) {
+    const transaction = await Compra.sequelize.transaction(); // Iniciar una transacción
+
+    try {
+        // Buscar la compra por ID
+        const compra = await Compra.findByPk(id_compra, { transaction });
+
+        if (!compra) {
+            throw new NotFoundError("La compra no existe.");
+        }
+
+        // Buscar el producto asociado a la compra
+        const producto = await Producto.findByPk(compra.id_producto, { transaction });
+
+        if (!producto) {
+            throw new NotFoundError("El producto asociado a la compra no existe.");
+        }
+
+        // Restar la cantidad agregada en la compra a la cantidad del producto
+        const nuevaCantidad = producto.cantidad - compra.cantidad_agregar;
+
+        if (nuevaCantidad < 0) {
+            throw new BadRequestError("La cantidad del producto no puede ser negativa.");
+        }
+
+        if (nuevaCantidad === 0) {
+            // Si la cantidad queda en cero, eliminar el producto
+            await producto.destroy({ transaction });
+        } else {
+            // Si no, actualizar la cantidad del producto
+            await producto.update({ cantidad: nuevaCantidad }, { transaction });
+        }
+
+        // Eliminar la compra
+        await compra.destroy({ transaction });
+
+        await transaction.commit(); // Confirmar la transacción
+        return { message: "Compra eliminada correctamente." };
+    } catch (error) {
+        await transaction.rollback(); // Revertir los cambios si ocurre un error
+        throw error;
     }
-
-    // Verificar si el usuario existe
-    const usuario = await Usuario.findOne({ where: { dni: dni_usuario } });
-    if (!usuario) {
-        throw new NotFoundError("El usuario no existe.");
-    }
-
-    // Buscar el producto por nombre
-    let producto = await Producto.findOne({ where: { nombre: nombre_producto } });
-
-    if (producto) {
-        // Si el producto existe, actualizar la cantidad utilizando editarCantidad
-        await editarCantidad(producto.id_producto, producto.cantidad + cantidad_agregar);
-    } else {
-        // Si el producto no existe, registrarlo
-        producto = await Producto.create({
-            nombre: nombre_producto,
-            precio_compra,
-            precio_venta,
-            cantidad: cantidad_agregar,
-            id_categoria
-        });
-    }
-
-    // Registrar la compra
-    const compra = await Compra.create({
-        cantidad_agregar,
-        precio: precio_compra,
-        fecha_compra: new Date(fecha_compra),
-        dni_usuario,
-        id_producto: producto.id_producto // Usar el ID del producto creado o actualizado
-    });
-
-    return compra;
 }
 
 export async function obtenerHistorialCompras() {

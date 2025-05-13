@@ -144,6 +144,36 @@ async function editar(id_producto, nombre, precio_venta, cantidad, id_categoria)
     }
 }
 
+// Editar producto por nombre
+async function editarPorNombre(nombre, nuevoNombre, precio_venta, id_categoria) {
+    if (!nombre || !nuevoNombre || !precio_venta || !id_categoria) {
+        throw new BadRequestError("Los datos no pueden estar vacíos");
+    }
+
+    try {
+        // Busco si existe la categoría
+        const categoriaExistente = await existeCategoria(id_categoria);
+        if (!categoriaExistente) {
+            throw new NotFoundError("La categoría no existe");
+        }
+
+        // Actualizo el producto con los nuevos datos
+        const producto = await productoEntidad.update({
+            nombre: nuevoNombre,
+            precio_venta: precio_venta,
+            id_categoria: id_categoria,
+            activo: true // Representado como 1 en la base de datos
+        }, {
+            where: { nombre: nombre }
+        });
+        return producto;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+
 // Activar o desactivar un producto
 async function activarDesactivar(id_producto, activo) {
     if (!id_producto || activo === undefined) {
@@ -258,6 +288,53 @@ async function buscarPorNombre(nombre) {
     return producto;
 }
 
+// Buscar producto por nombre parecido solo activos
+async function buscarPorNombreParecido(nombre) {
+    if (!nombre) {
+        throw new BadRequestError("El nombre del producto no puede estar vacío");
+    }
+
+    try {
+        const productos = await productoEntidad.findAll({
+            where: {
+                nombre: {
+                    [Op.like]: `%${nombre}%` // Busca nombres que contengan la cadena proporcionada (sensible a mayúsculas)
+                },
+                activo: true // Solo productos activos
+            },
+            include: [{
+                model: categoriaEntidad,
+                attributes: ['nombre']
+            }]
+        });
+
+        return productos.map(producto => ({
+            nombre: producto.nombre,
+            id_categoria: producto.id_categoria,
+            cantidad: producto.cantidad,
+            precio_venta: producto.precio_venta
+        }));
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+// Obtener cantidad de un producto por su nombre
+async function obtenerCantidadPorNombre(nombre) {
+    if (!nombre) {
+        throw new BadRequestError("El nombre del producto no puede estar vacío");
+    }
+
+    const producto = await productoEntidad.findOne({
+        where: { nombre: nombre }
+    });
+    if (!producto) {
+        throw new NotFoundError("El producto no existe");
+    }
+    return producto.cantidad;
+}
+
 // editar cantidad
 export async function editarCantidad(id_producto, cantidad) {
     if (!id_producto || !cantidad) {
@@ -343,12 +420,15 @@ export default {
     listarResumido,
     listarResumidoActivos,
     editar,
+    editarPorNombre,
     activarDesactivar,
     activarDesactivarPorNombre,
     eliminar,
     eliminarPorNombre,
     buscarPorId,
     buscarPorNombre,
+    buscarPorNombreParecido,
+    obtenerCantidadPorNombre,
     editarCantidad,
     filtrarPorCategoria,
     filtrarPorCantidadCategoriaPrecio
