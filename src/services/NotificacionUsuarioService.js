@@ -61,8 +61,11 @@ async function listarParaGestoras(dni) {
     }
     return notificaciones.map((notificacionUser) => {
             return {
+                id: notificacionUser.id,
                 descripcion: notificacionUser.notificacion.mensaje,
-                leida: notificacionUser.leida
+                leida: notificacionUser.leida,
+                usuario_dni: notificacionUser.id_usuario,
+                id_notificacion: notificacionUser.notificacion.id_notificacion
             }
         });
     } catch (error) {
@@ -124,8 +127,11 @@ async function listarParaAdministradora(dni) {
     }
     return notificaciones.map((notificacionUser) => {
             return {
+                id: notificacionUser.id,
                 descripcion: notificacionUser.notificacion.mensaje,
-                leida: notificacionUser.leida
+                leida: notificacionUser.leida,
+                usuario_dni: notificacionUser.id_usuario,
+                id_notificacion: notificacionUser.notificacion.id_notificacion
             }
         });
     } catch (error) {
