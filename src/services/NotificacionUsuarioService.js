@@ -68,5 +68,23 @@ async function listarParaGestoras(dni) {
         throw error;
     }
     
+};
+
+async function cambiarEstado(id) {
+    if(!id){
+        throw new BadRequestError("el id es vacío");
+    }
+    try {
+        const nofiUsuario = await notiUsuarioEntidad.findByPk(id);
+        if(!nofiUsuario){
+            throw new NotFoundError("No se encontró la notificacion del usuario");
+        }
+        nofiUsuario.leida = true;
+        await nofiUsuario.save({field:['leida'] });
+        return nofiUsuario;
+    } catch (error) {
+        throw error;
+    }
 }
-export default {registrar, listarParaGestoras}
+
+export default {registrar, listarParaGestoras, cambiarEstado}

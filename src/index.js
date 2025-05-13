@@ -58,6 +58,6 @@ app.use("/login", loginRoutes);
 app.use("/productos", productoRoutes);
 app.use("/compras", compraRoutes);
 app.use("/recuperar-contrasena", recuperarContrasenaRoutes);
-app.use("/notificacionesGestoras", notifiUsuarioRoutes );
+app.use("/notificaciones", notifiUsuarioRoutes );
 //import UsuarioService from "./services/UsuarioService.js";
 //UsuarioService.listarGestoras();

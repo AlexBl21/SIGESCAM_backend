@@ -10,4 +10,12 @@ async function listarParaGestora(req, res) {
     }
 }
 
-export default {listarParaGestora};
+async function cambiarEstado(req, res) {
+    try {
+        const notificacion = await NotificacionUsuarioService.cambiarEstado(req.params.id);
+        res.status(200).json(notificacion);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({ message: "Error al obtener sugerencias", error: error.message });
+    }
+}
+export default {listarParaGestora, cambiarEstado};
