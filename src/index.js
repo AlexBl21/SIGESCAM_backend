@@ -25,6 +25,7 @@ import CategoriaRoutes from "./routes/CategoriaRoutes.js";
 import productoRoutes from "./routes/ProductoRoutes.js";
 import recuperarContrasenaRoutes from "./routes/RecuperarContrasenaRoutes.js";
 import cors from "cors";
+import notifiUsuarioRoutes from "./routes/NotificacionUsuarioRoutes.js";
 
 dotenv.config({
   path: "../.env"
@@ -57,3 +58,6 @@ app.use("/login", loginRoutes);
 app.use("/productos", productoRoutes);
 app.use("/compras", compraRoutes);
 app.use("/recuperar-contrasena", recuperarContrasenaRoutes);
+app.use("/notificacionesGestoras", notifiUsuarioRoutes );
+//import UsuarioService from "./services/UsuarioService.js";
+//UsuarioService.listarGestoras();

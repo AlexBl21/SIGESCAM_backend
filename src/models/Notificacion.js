@@ -8,7 +8,6 @@ import Sugerencia from "./Sugerencia.js";
 const Notificacion = db.define("notificacion", {
     id_notificacion: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     mensaje: {type: DataTypes.STRING(800), allowNull: false},
-    leida: { type: dataTypes.BOOLEAN, allowNull: false, defaultValue: false}, 
     fecha_creacion: { type: DataTypes.DATE, allowNull: false}, 
 }, {
     timestamps: false, 

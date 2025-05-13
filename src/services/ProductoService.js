@@ -3,6 +3,9 @@ import { NotFoundError, BadRequestError, Conflict, InternalServerError } from ".
 import categoriaEntidad from "../models/Categoria.js";
 import { existeCategoria } from "./CategoriaService.js";
 import { Op } from "sequelize";
+import NotificacionService from "./NotificacionService.js";
+import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
+import UsuarioService from "./UsuarioService.js";
 
 //Registrar un Producto
 async function registrar(nombre, precio_compra, precio_venta, cantidad, id_categoria) {
@@ -32,6 +35,26 @@ async function registrar(nombre, precio_compra, precio_venta, cantidad, id_categ
             id_categoria: id_categoria,
             activo: true // Representado como 1 en la base de datos
         });
+        if (!producto?.id_producto) {
+            throw new Error('Error al crear producto');
+        }
+
+        const nuevaNotificacion =await NotificacionService.registrarNotificacion(`Se ha agregado un nuevo producto: ${nombre}`, producto.id_producto, "1", null);
+        if (!nuevaNotificacion?.id_notificacion) {
+            throw new Error('Error al crear notificación principal');
+        };
+        const gestoras = await UsuarioService.listarGestoras();
+        for (const gestora of gestoras) {
+            try {
+                const nuevaNotiUsuario = await NotificacionUsuarioService.registrar(gestora.dni, 
+                nuevaNotificacion.id_notificacion);
+                if(!nuevaNotiUsuario){
+                    throw new InternalServerError("no se pudo crear Notificacion Usuario correctamente");
+                }
+            } catch (error) {
+                throw error;
+            };
+        }
         return producto;
     } catch (error) {
         console.log(error);

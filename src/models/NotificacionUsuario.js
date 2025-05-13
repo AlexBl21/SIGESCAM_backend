@@ -6,7 +6,6 @@ import Usuario from "./Usuario.js";
 const NotificacionUsuario = db.define("notificacion_usuario", {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
     leida: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false},
-    fecha_leida: { type: DataTypes.DATE, allowNull: false}
 }, {
     timestamps: false, 
     freezeTableName: true
