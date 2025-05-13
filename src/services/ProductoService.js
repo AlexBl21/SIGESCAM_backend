@@ -122,8 +122,8 @@ async function editar(id_producto, nombre, precio_venta, cantidad, id_categoria)
 }
 
 // Editar producto por nombre
-async function editarPorNombre(nombre, nuevoNombre, precio_venta, cantidad, id_categoria) {
-    if (!nombre || !nuevoNombre || !precio_venta || !cantidad || !id_categoria) {
+async function editarPorNombre(nombre, nuevoNombre, precio_venta, id_categoria) {
+    if (!nombre || !nuevoNombre || !precio_venta || !id_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
     }
 
@@ -138,7 +138,6 @@ async function editarPorNombre(nombre, nuevoNombre, precio_venta, cantidad, id_c
         const producto = await productoEntidad.update({
             nombre: nuevoNombre,
             precio_venta: precio_venta,
-            cantidad: cantidad,
             id_categoria: id_categoria,
             activo: true // Representado como 1 en la base de datos
         }, {
