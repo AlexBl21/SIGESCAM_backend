@@ -51,17 +51,18 @@ async function listarParaGestoras(dni) {
                 include: [
                     {
                         model: TipoNotificacion,
-                        where: {
-                            nombre: 'nuevoProducto' 
-                        }
                     }
                 ]
             }
         ]
     })
+    if(!notificaciones){
+        throw new NotFoundError("No se encontraron notificaiones");
+    }
     return notificaciones.map((notificacionUser) => {
             return {
-                descripcion: notificacionUser.notificacion.mensaje
+                descripcion: notificacionUser.notificacion.mensaje,
+                leida: notificacionUser.leida
             }
         });
     } catch (error) {
@@ -85,6 +86,52 @@ async function cambiarEstado(id) {
     } catch (error) {
         throw error;
     }
+};
+
+async function listarParaAdministradora(dni) {
+    try {
+        const notificaciones = await NotificacionUsuario.findAll({
+        include: [
+            {
+                model: usuarioEntidad,
+                where: {
+                    dni: dni,
+                },
+                include: [
+                    {
+                        model: Rol,
+                        where: {
+                            id: 'Administrador' 
+                        }
+                    }
+                ]
+            },
+            {
+                model: notificacionEntidad,
+                include: [
+                    {
+                        model: TipoNotificacion,
+                        where: {
+                            nombre: 'stock' 
+                        }
+                    }
+                ]
+            }
+        ]
+    })
+    if(!notificaciones){
+        throw new NotFoundError("No se encontraron notificaiones");
+    }
+    return notificaciones.map((notificacionUser) => {
+            return {
+                descripcion: notificacionUser.notificacion.mensaje,
+                leida: notificacionUser.leida
+            }
+        });
+    } catch (error) {
+        throw error;
+    }
+    
 }
 
-export default {registrar, listarParaGestoras, cambiarEstado}
+export default {registrar, listarParaGestoras, cambiarEstado, listarParaAdministradora}

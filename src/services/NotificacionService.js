@@ -39,4 +39,22 @@ async function registrarNotificacion(mensaje, idProducto, idTipoNotificacion, id
     }
 };
 
-export default {registrarNotificacion}
+async function registrarNotificacionStock(mensaje, idTipoNotificacion){
+    if(!mensaje  || !idTipoNotificacion){
+        throw new BadRequestError("Los campos están vacios")
+    }
+    const tipoNoti = await tipoNotiEntidad.findByPk(idTipoNotificacion);
+        if(!tipoNoti){
+            throw new NotFoundError("No se encontró el tipo de notificacion");
+        }
+        const notificacion = await Notificacion.create({
+            mensaje: mensaje,
+            fecha_creacion: new Date(),
+            id_producto: null,
+            id_tipo: idTipoNotificacion,
+            id_sugerencia: null
+        });
+        return notificacion;
+}
+
+export default {registrarNotificacion, registrarNotificacionStock}

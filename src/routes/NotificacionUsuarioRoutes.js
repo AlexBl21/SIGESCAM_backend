@@ -4,4 +4,5 @@ import NotificacionUsuarioController from "../controllers/NotificacionUsuarioCon
 
 router.get("/paraGestoras/:dni", NotificacionUsuarioController.listarParaGestora );
 router.patch("/:id", NotificacionUsuarioController.cambiarEstado);
+router.get("/paraAdministradora/:dni", NotificacionUsuarioController.listarParaAdministradora );
 export default router;

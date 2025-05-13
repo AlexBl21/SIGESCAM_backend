@@ -103,6 +103,7 @@ async function listar() {
     return usuarios.map((usuario) => {
         const estado = calcularEstado(usuario.estado);
         return {
+            dni: usuario.dni,
             nombre: usuario.nombre,
             rol: usuario.rol.descripcion,
             estado
