@@ -151,6 +151,12 @@ async function editarPorNombre(nombre, nuevoNombre, precio_venta, id_categoria) 
     }
 
     try {
+        // Verifico si el nuevo nombre ya pertenece a otro producto
+        const productoExistente = await existeProducto(nuevoNombre);
+        if (productoExistente && productoExistente.nombre !== nombre) {
+            throw new Conflict("El nuevo nombre ya pertenece a otro producto");
+        }
+
         // Busco si existe la categoría
         const categoriaExistente = await existeCategoria(id_categoria);
         if (!categoriaExistente) {
