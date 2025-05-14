@@ -12,7 +12,7 @@ async function registrar(dni, nombre, email, telefono, rol) {
     if (!dni || !nombre || !email  || !telefono || !rol) {
         throw new BadRequestError("Los datos no pueder esta vacios");
     }
-
+    
     try {
         //busco si existe el usuario
         const usuarioNuevo = await usuarioEntidad.findByPk(dni);
@@ -103,8 +103,9 @@ async function listar() {
     return usuarios.map((usuario) => {
         const estado = calcularEstado(usuario.estado);
         return {
+            dni: usuario.dni,
             nombre: usuario.nombre,
-            rol: usuario.rol.descripcion,
+            rol: usuario.rol.id,
             estado
         }
     });

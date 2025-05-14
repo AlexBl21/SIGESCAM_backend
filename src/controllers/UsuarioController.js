@@ -4,13 +4,14 @@ import { actualizarCorreoElectronico } from "../services/UsuarioService.js";
 
 async function registrar(req, res) {
     try {
+        console.log("Datos recibidos en el backend:", req.body);
         const usuario = await usuarioService.registrar(
             req.body.dni,
             req.body.nombre,
             req.body.email,
             req.body.telefono,
             //para claves foraneas deben ver en el modelo como se llama ese campo: 
-            req.body.id_rol
+            req.body.rol
         );
         res.status(201).json(usuario);
     } catch (error) {
