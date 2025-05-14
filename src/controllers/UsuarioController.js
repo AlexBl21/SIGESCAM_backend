@@ -1,6 +1,8 @@
 import Sugerencia from "../models/Sugerencia.js";
 import usuarioService from "../services/UsuarioService.js";
 import { actualizarCorreoElectronico } from "../services/UsuarioService.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 async function registrar(req, res) {
     try {
@@ -107,21 +109,21 @@ export async function editarCorreo(req, res) {
 }
 
 async function crearContrasena(req, res) {
-  try {
-    const { token } = req.params;
-    const { contrasena } = req.body;
+    try {
+        const { token } = req.params;
+        const { contrasena } = req.body;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { dni } = decoded;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { dni } = decoded;
 
-    const contraseñaHasheada = await bcrypt.hash(contrasena, 10);
-    await usuarioService.actualizarContraseña(dni, contraseñaHasheada);
+        const contraseñaHasheada = await bcrypt.hash(contrasena, 10);
+        await usuarioService.actualizarContraseña(dni, contraseñaHasheada);
 
-    res.json({ message: "Contraseña creada exitosamente" });
-  } catch (error) {
-    console.error("Error al crear contraseña:", error.message);
-    res.status(400).json({ message: error.message });
-  }
+        res.json({ message: "Contraseña creada exitosamente" });
+    } catch (error) {
+        console.error("Error al crear contraseña:", error.message);
+        res.status(400).json({ message: error.message });
+    }
 }
 
 export default { registrar, listar, editar, cambioDeEstado, buscarPorId, crearContrasena }
