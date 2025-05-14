@@ -77,9 +77,9 @@ async function editar(req, res) {
 async function editarPorNombre(req, res) {
     try {
         const { nombre } = req.params;
-        const { nuevoNombre, precio_venta, cantidad, id_categoria } = req.body;
+        const { nuevoNombre, precio_venta, id_categoria } = req.body;
 
-        if (!nombre || !nuevoNombre || !precio_venta || !cantidad || !id_categoria) {
+        if (!nombre || !nuevoNombre || !precio_venta || !id_categoria) {
             return res.status(400).json({ message: "Los datos no pueden estar vacíos" });
         }
 
@@ -87,7 +87,6 @@ async function editarPorNombre(req, res) {
             nombre,
             nuevoNombre,
             precio_venta,
-            cantidad,
             id_categoria
         );
 

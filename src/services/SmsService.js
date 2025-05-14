@@ -14,8 +14,8 @@ export async function enviarSms(telefono, codigo) {
     try {
         await client.messages.create({
             body: mensaje,
-            from: '+16185529859',
-            to: '+573208862952'
+            from: '+19785793071',
+            to: '+573507736705'
         });
         console.log(`Código enviado a ${telefono}`);
         return true;

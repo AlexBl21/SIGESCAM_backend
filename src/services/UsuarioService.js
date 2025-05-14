@@ -211,5 +211,36 @@ async function actualizarContraseña(dni, contraseñaHasheada) {
     return clienteExistente;
   };
 
+async function listarGestoras() {
+    const usuarios = await usuarioEntidad.findAll({
+        include: [{
+            model: rol,
+            where: {
+                id: 'Gestor de ventas' 
+            },
+            required: true 
+        }]
+    });
+    if (!usuarios) {
+        throw new NotFoundError("No se encontraron usuarios");
+    }
+    return usuarios;
+};
 
-export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña };
+async function listarAdministradoras() {
+    const usuarios = await usuarioEntidad.findAll({
+        include: [{
+            model: rol,
+            where: {
+                id: 'Administrador' 
+            },
+            required: true 
+        }]
+    });
+    if (!usuarios) {
+        throw new NotFoundError("No se encontraron usuarios");
+    }
+    return usuarios;
+};
+
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras };

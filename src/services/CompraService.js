@@ -29,8 +29,16 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
         let producto = await Producto.findOne({ where: { nombre: nombre_producto }, transaction });
 
         if (producto) {
-            // Si el producto existe, actualizar la cantidad utilizando editarCantidad
-            await editarCantidad(producto.id_producto, producto.cantidad + cantidad_agregar, transaction);
+            // Si el producto está desactivado, activarlo y establecer la cantidad inicial
+            if (!producto.activo) {
+                await producto.update({ activo: true, cantidad: cantidad_agregar }, { transaction });
+            } else {
+                // Si el producto está activo, actualizar la cantidad utilizando editarCantidad
+                await editarCantidad(producto.id_producto, producto.cantidad + cantidad_agregar, transaction);
+            }
+
+            // Actualizar el precio de compra y venta al último agregado
+            await producto.update({ precio_compra, precio_venta }, { transaction });
         } else {
             // Si el producto no existe, registrarlo
             producto = await Producto.create({
@@ -38,7 +46,8 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
                 precio_compra,
                 precio_venta,
                 cantidad: cantidad_agregar,
-                id_categoria
+                id_categoria,
+                activo: true
             }, { transaction });
         }
 
