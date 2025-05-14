@@ -6,6 +6,6 @@ const router = Router();
 router.post("/", CategoriaController.registrar);
 router.get("/", CategoriaController.listar);
 router.put("/", CategoriaController.actualizar);
-router.delete("/:nombre", CategoriaController.eliminar);
+router.delete("/:id", CategoriaController.eliminar);
 
 export default router;
