@@ -2,7 +2,8 @@ import db from "../db/db.js";
 import { DataTypes } from "sequelize";
 
 const Categoria = db.define("categoria", {
-    nombre: { type: DataTypes.STRING(50), primaryKey: true}, 
+    id_categoria: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true}, 
+    nombre: { type: DataTypes.STRING(50), allownull: false}, 
     descripcion: { type: DataTypes.STRING(100), allowNull: false}
 }, {
     timestamps: false, 
