@@ -8,7 +8,7 @@ import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
 import UsuarioService from "./UsuarioService.js";
 
 //Registrar un Producto - USANDO EN EL FRONT
-async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_categoria) {
+export async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_categoria) {
     if (!nombre || !precio_compra || !precio_venta || !cantidad || !nombre_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
     }

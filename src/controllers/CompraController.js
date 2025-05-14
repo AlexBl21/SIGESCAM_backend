@@ -48,9 +48,9 @@ export async function comprasPorProducto(req, res) {
 
 export async function registrarCompra(req, res) {
   try {
-    const { dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, id_categoria, fecha_compra } = req.body;
+    const { dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, nombre_categoria, fecha_compra } = req.body;
 
-    if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !id_categoria || !fecha_compra) {
+    if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !nombre_categoria || !fecha_compra) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
 
@@ -58,7 +58,7 @@ export async function registrarCompra(req, res) {
       return res.status(400).json({ message: "La cantidad debe ser mayor a cero" });
     }
 
-    const compra = await registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, id_categoria, fecha_compra);
+    const compra = await registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, nombre_categoria, fecha_compra);
     res.status(201).json(compra);
   } catch (error) {
     res.status(500).json({ 

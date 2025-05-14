@@ -3,15 +3,15 @@ import Compra from "../models/Compra.js";
 import Producto from "../models/Producto.js";
 import Usuario from "../models/Usuario.js";
 import { BadRequestError, NotFoundError } from "../errors/Errores.js";
-import { editarCantidad } from "./ProductoService.js";
+import { editarCantidad, registrar as registrarProducto } from "./ProductoService.js";
 import { Op } from "sequelize";
 
-export async function registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, id_categoria, fecha_compra) {
+export async function registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, nombre_categoria, fecha_compra) {
     const transaction = await Compra.sequelize.transaction(); // Iniciar una transacción
 
     try {
         // Validar que los parámetros obligatorios no sean nulos o inválidos
-        if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !id_categoria || !fecha_compra) {
+        if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !nombre_categoria || !fecha_compra) {
             throw new BadRequestError("Todos los campos son obligatorios.");
         }
 
@@ -40,15 +40,14 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
             // Actualizar el precio de compra y venta al último agregado
             await producto.update({ precio_compra, precio_venta }, { transaction });
         } else {
-            // Si el producto no existe, registrarlo
-            producto = await Producto.create({
-                nombre: nombre_producto,
+            // Si el producto no existe, registrarlo utilizando el método registrar de ProductoService
+            producto = await registrarProducto(
+                nombre_producto,
                 precio_compra,
                 precio_venta,
-                cantidad: cantidad_agregar,
-                id_categoria,
-                activo: true
-            }, { transaction });
+                cantidad_agregar,
+                nombre_categoria
+            );
         }
 
         // Registrar la compra
