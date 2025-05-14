@@ -9,7 +9,7 @@ import { enviarCorreo } from "../services/EmailService.js";
 
 //registrar un Usuario 
 async function registrar(dni, nombre, email, telefono, rol) {
-    if (!dni || !nombre || !email  || !telefono || !rol) {
+    if (!dni || !nombre || !email || !telefono || !rol) {
         throw new BadRequestError("Los datos no pueder esta vacios");
     }
 
@@ -22,7 +22,7 @@ async function registrar(dni, nombre, email, telefono, rol) {
         //busco si existe el correo
         const existe = await existeCorreo(email);
         if (existe) {
-            throw new Conflict("El correo ya existe"); 
+            throw new Conflict("El correo ya existe");
         }
         //busco si existe el rol
         const rolBuscado = await rolEntidad.findByPk(rol);
@@ -41,39 +41,61 @@ async function registrar(dni, nombre, email, telefono, rol) {
             //para claves foraneas deben ver en el modelo como se llama ese campo: 
             id_rol: rol
         });
-        const token = jwt.sign({ dni }, process.env.JWT_SECRET, { expiresIn: "72h" });
+        const token = jwt.sign({ dni }, process.env.JWT_SECRET, { expiresIn: "48h" });
         console.log(token);
-        const link = `${process.env.FRONTEND_URL}/crear-contrasena/${token}`;
+        const link = `${process.env.FRONTEND_URL}/establecer-contraseña/${token}`;
         await enviarCorreo(
-      email,
-      "Crea tu contraseña",
+            email,
+            "Crea tu contraseña",
+            `
+        <div style="
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: auto;
+    padding: 24px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background: linear-gradient(to bottom right, #ffe4f0, #e0f0ff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  ">
+    <h2 style="color: #444; text-align: center;">Hola ${nombre},</h2>
+    <p style="font-size: 16px; color: #555;">
+      Bienvenido(a) a <strong>SIGESCAM - Variedades Carmencita</strong>. Para crear tu contraseña, haz clic en el siguiente botón:
+    </p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${link}" style="
+        background-color: #ff6fa1;
+        color: white;
+        padding: 14px 28px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 16px;
+        display: inline-block;
+        transition: background-color 0.3s ease;
+      " onmouseover="this.style.backgroundColor='#ff4d85'" onmouseout="this.style.backgroundColor='#ff6fa1'">
+        Crear contraseña
+      </a>
+    </div>
+
+    <p style="font-size: 14px; color: #666;">
+      Si el botón no funciona, también puedes copiar y pegar el siguiente enlace en tu navegador:
+    </p>
+    <p style="word-break: break-all; font-size: 14px; color: #0077cc;">
+      ${link}
+    </p>
+
+    <p style="font-size: 14px; color: #888;">
+      Este enlace expirará en 2 días.
+    </p>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+    <p style="font-size: 12px; color: #aaa; text-align: center;">
+      © ${new Date().getFullYear()} Variedades Carmencita. Todos los derechos reservados.
       `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
-          <h2 style="color: #333;">Hola ${nombre},</h2>
-          <p style="font-size: 16px; color: #555;">
-            Gracias por registrarte en <strong>Gym Klinsmann</strong>. Para crear tu contraseña, haz clic en el siguiente botón:
-          </p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${link}" style="background-color:rgb(255, 0, 0); color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-              Crear contraseña
-            </a>
-          </div>
-          <p style="font-size: 14px; color: #888;">
-            Si el botón no funciona, también puedes copiar y pegar el siguiente enlace en tu navegador:
-          </p>
-          <p style="word-break: break-all; font-size: 14px; color:rgb(255, 0, 0);">
-            ${link}
-          </p>
-          <p style="font-size: 14px; color: #999;">
-            Este enlace expirará en 3 días.
-          </p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-          <p style="font-size: 12px; color: #aaa; text-align: center;">
-            © ${new Date().getFullYear()} Gym Klinsmann. Todos los derechos reservados.
-          </p>
-        </div>
-      `
-    );
+        );
         return usuario;
     } catch (error) {
         console.log(error);
@@ -105,7 +127,7 @@ async function listar() {
         return {
             dni: usuario.dni,
             nombre: usuario.nombre,
-            rol: usuario.rol.descripcion,
+            rol: usuario.rol.id,
             estado
         }
     });
@@ -203,22 +225,22 @@ export async function actualizarCorreoElectronico(dni, nuevoEmail) {
 async function actualizarContraseña(dni, contraseñaHasheada) {
     const clienteExistente = await usuarioEntidad.findByPk(dni);
     if (!clienteExistente) {
-      throw new Error("Cliente no encontrado");
+        throw new Error("Cliente no encontrado");
     }
-  
+
     clienteExistente.contrasena = contraseñaHasheada;
     await clienteExistente.save();
     return clienteExistente;
-  };
+};
 
 async function listarGestoras() {
     const usuarios = await usuarioEntidad.findAll({
         include: [{
             model: rol,
             where: {
-                id: 'Gestor de ventas' 
+                id: 'Gestor de ventas'
             },
-            required: true 
+            required: true
         }]
     });
     if (!usuarios) {
@@ -232,9 +254,9 @@ async function listarAdministradoras() {
         include: [{
             model: rol,
             where: {
-                id: 'Administrador' 
+                id: 'Administrador'
             },
-            required: true 
+            required: true
         }]
     });
     if (!usuarios) {
