@@ -7,7 +7,7 @@ import NotificacionService from "./NotificacionService.js";
 import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
 import UsuarioService from "./UsuarioService.js";
 
-//Registrar un Producto
+//Registrar un Producto - USANDO EN EL FRONT
 async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_categoria) {
     if (!nombre || !precio_compra || !precio_venta || !cantidad || !nombre_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
@@ -63,7 +63,7 @@ async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_c
     }
 }
 
-//mirar si el producto ya existe
+//mirar si el producto ya existe - USANDO EN EL FRONT
 async function existeProducto(nombre) {
     return await productoEntidad.findOne({
         where: { nombre: nombre }
@@ -98,7 +98,7 @@ async function listarResumido() {
     }));
 }
 
-// Listar productos resumido solo activos
+// Listar productos resumido solo activos - USANDO EN EL FRONT
 async function listarResumidoActivos() {
     const productos = await productoEntidad.findAll({
         attributes: ['nombre', 'cantidad', 'precio_venta'],
@@ -146,9 +146,9 @@ async function editar(id_producto, nombre, precio_venta, cantidad, id_categoria)
     }
 }
 
-// Editar producto por nombre
-async function editarPorNombre(nombre, nuevoNombre, precio_venta, id_categoria) {
-    if (!nombre || !nuevoNombre || !precio_venta || !id_categoria) {
+// Editar producto por nombre - USANDO EN EL FRONT
+async function editarPorNombre(nombre, nuevoNombre, precio_venta, nombre_categoria) {
+    if (!nombre || !nuevoNombre || !precio_venta || !nombre_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
     }
 
@@ -159,8 +159,10 @@ async function editarPorNombre(nombre, nuevoNombre, precio_venta, id_categoria) 
             throw new Conflict("El nuevo nombre ya pertenece a otro producto");
         }
 
-        // Busco si existe la categoría
-        const categoriaExistente = await existeCategoria(id_categoria);
+        // Busco la categoría por su nombre
+        const categoriaExistente = await categoriaEntidad.findOne({
+            where: { nombre: nombre_categoria }
+        });
         if (!categoriaExistente) {
             throw new NotFoundError("La categoría no existe");
         }
@@ -169,7 +171,7 @@ async function editarPorNombre(nombre, nuevoNombre, precio_venta, id_categoria) 
         const producto = await productoEntidad.update({
             nombre: nuevoNombre,
             precio_venta: precio_venta,
-            id_categoria: id_categoria,
+            id_categoria: categoriaExistente.id_categoria,
             activo: true // Representado como 1 en la base de datos
         }, {
             where: { nombre: nombre }
@@ -202,7 +204,7 @@ async function activarDesactivar(id_producto, activo) {
     }
 }
 
-// Activar o desactivar un producto por nombre
+// Activar o desactivar un producto por nombre - USANDO EN EL FRONT
 async function activarDesactivarPorNombre(nombre, activo) {
     if (!nombre || activo === undefined) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
@@ -245,7 +247,7 @@ async function eliminar(id_producto) {
     }
 }
 
-// Elimnar producto por nombre
+// Elimnar producto por nombre - USANDO EN EL FRONT
 async function eliminarPorNombre(nombre) {
     if (!nombre) {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
@@ -281,7 +283,7 @@ async function buscarPorId(id_producto) {
     return producto;
 }
 
-// Buscar producto por nombre
+// Buscar producto por nombre - USANDO EN EL FRONT
 async function buscarPorNombre(nombre) {
     if (!nombre) {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
@@ -296,7 +298,7 @@ async function buscarPorNombre(nombre) {
     return producto;
 }
 
-// Buscar producto por nombre parecido solo activos
+// Buscar producto por nombre parecido solo activos - USANDO EN EL FRONT
 async function buscarPorNombreParecido(nombre) {
     if (!nombre) {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
@@ -328,7 +330,7 @@ async function buscarPorNombreParecido(nombre) {
     }
 }
 
-// Obtener cantidad de un producto por su nombre
+// Obtener cantidad de un producto por su nombre - USANDO EN EL FRONT
 async function obtenerCantidadPorNombre(nombre) {
     if (!nombre) {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
@@ -343,7 +345,7 @@ async function obtenerCantidadPorNombre(nombre) {
     return producto.cantidad;
 }
 
-// editar cantidad
+// editar cantidad - USANDO EN EL FRONT
 export async function editarCantidad(id_producto, cantidad) {
     if (!id_producto || !cantidad) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
@@ -380,7 +382,7 @@ async function filtrarPorCategoria(id_categoria) {
     }
 }
 
-// Filtrado de productos activos por cantidad, categoria y precio con múltiples filtros
+// Filtrado de productos activos por cantidad, categoria y precio con múltiples filtros - USANDO EN EL FRONT
 async function filtrarPorCantidadCategoriaPrecio(cantidad, id_categoria, precio) {
     try {
         const whereClauses = []; // Lista de condiciones WHERE
