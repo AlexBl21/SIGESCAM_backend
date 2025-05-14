@@ -383,7 +383,7 @@ async function filtrarPorCategoria(id_categoria) {
 }
 
 // Filtrado de productos activos por cantidad, categoria y precio con múltiples filtros - USANDO EN EL FRONT
-async function filtrarPorCantidadCategoriaPrecio(cantidad, id_categoria, precio) {
+async function filtrarPorCantidadCategoriaPrecio(cantidad, nombre_categoria, precio) {
     try {
         const whereClauses = []; // Lista de condiciones WHERE
 
@@ -394,8 +394,15 @@ async function filtrarPorCantidadCategoriaPrecio(cantidad, id_categoria, precio)
             whereClauses.push({ cantidad: { [Op.lte]: cantidad } }); // Productos con cantidad menor o igual
         }
 
-        if (id_categoria !== null && id_categoria !== undefined) {
-            whereClauses.push({ id_categoria: id_categoria }); // Productos de una categoría específica
+        if (nombre_categoria !== null && nombre_categoria !== undefined) {
+            // Busco la categoría por su nombre
+            const categoriaExistente = await categoriaEntidad.findOne({
+                where: { nombre: nombre_categoria }
+            });
+            if (!categoriaExistente) {
+                throw new NotFoundError("La categoría no existe");
+            }
+            whereClauses.push({ id_categoria: categoriaExistente.id_categoria }); // Productos de una categoría específica
         }
 
         if (precio !== null && precio !== undefined && !isNaN(precio)) {
@@ -403,7 +410,7 @@ async function filtrarPorCantidadCategoriaPrecio(cantidad, id_categoria, precio)
         }
 
         const productos = await productoEntidad.findAll({
-            attributes: ['nombre', 'cantidad', 'precio_venta', 'id_categoria'],
+            attributes: ['nombre', 'cantidad', 'precio_venta'],
             where: { [Op.and]: whereClauses }, // Combino todas las condiciones con AND
             include: [{
                 model: categoriaEntidad,
@@ -413,7 +420,7 @@ async function filtrarPorCantidadCategoriaPrecio(cantidad, id_categoria, precio)
 
         return productos.map(producto => ({
             nombre: producto.nombre,
-            id_categoria: producto.id_categoria,
+            categoria: producto.categorium?.nombre || "No tiene categoria", // Muestra el nombre de la categoría o null si no existe
             cantidad: producto.cantidad,
             precio_venta: producto.precio_venta
         }));
