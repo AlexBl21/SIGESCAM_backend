@@ -320,7 +320,7 @@ async function buscarPorNombreParecido(nombre) {
 
         return productos.map(producto => ({
             nombre: producto.nombre,
-            id_categoria: producto.id_categoria,
+            categoria: producto.categorium?.nombre || "No tiene categoria", // Muestra el nombre de la categoría o null si no existe
             cantidad: producto.cantidad,
             precio_venta: producto.precio_venta
         }));
