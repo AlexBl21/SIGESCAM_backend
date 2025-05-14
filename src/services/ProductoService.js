@@ -8,8 +8,8 @@ import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
 import UsuarioService from "./UsuarioService.js";
 
 //Registrar un Producto
-async function registrar(nombre, precio_compra, precio_venta, cantidad, id_categoria) {
-    if (!nombre || !precio_compra || !precio_venta || !cantidad || !id_categoria) {
+async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_categoria) {
+    if (!nombre || !precio_compra || !precio_venta || !cantidad || !nombre_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
     }
 
@@ -20,8 +20,10 @@ async function registrar(nombre, precio_compra, precio_venta, cantidad, id_categ
             throw new Conflict("El producto ya existe");
         }
 
-        // Busco si existe la categoría
-        const categoriaExistente = await existeCategoria(id_categoria);
+        // Busco la categoría por su nombre
+        const categoriaExistente = await categoriaEntidad.findOne({
+            where: { nombre: nombre_categoria }
+        });
         if (!categoriaExistente) {
             throw new NotFoundError("La categoría no existe");
         }
@@ -32,28 +34,27 @@ async function registrar(nombre, precio_compra, precio_venta, cantidad, id_categ
             precio_compra: precio_compra,
             precio_venta: precio_venta,
             cantidad: cantidad,
-            id_categoria: id_categoria,
+            id_categoria: categoriaExistente.id_categoria,
             activo: true // Representado como 1 en la base de datos
         });
         if (!producto?.id_producto) {
             throw new Error('Error al crear producto');
         }
 
-        const nuevaNotificacion =await NotificacionService.registrarNotificacion(`Se ha agregado un nuevo producto: ${nombre}`, producto.id_producto, "1", null);
+        const nuevaNotificacion = await NotificacionService.registrarNotificacion(`Se ha agregado un nuevo producto: ${nombre}`, producto.id_producto, "1", null);
         if (!nuevaNotificacion?.id_notificacion) {
             throw new Error('Error al crear notificación principal');
-        };
+        }
         const gestoras = await UsuarioService.listarGestoras();
         for (const gestora of gestoras) {
             try {
-                const nuevaNotiUsuario = await NotificacionUsuarioService.registrar(gestora.dni, 
-                nuevaNotificacion.id_notificacion);
-                if(!nuevaNotiUsuario){
-                    throw new InternalServerError("no se pudo crear Notificacion Usuario correctamente");
+                const nuevaNotiUsuario = await NotificacionUsuarioService.registrar(gestora.dni, nuevaNotificacion.id_notificacion);
+                if (!nuevaNotiUsuario) {
+                    throw new InternalServerError("No se pudo crear Notificación Usuario correctamente");
                 }
             } catch (error) {
                 throw error;
-            };
+            }
         }
         return producto;
     } catch (error) {
@@ -85,6 +86,7 @@ async function listarResumido() {
         attributes: ['nombre', 'cantidad', 'precio_venta', 'id_categoria'],
         include: [{
             model: categoriaEntidad,
+            as: 'categorium', // Set the alias explicitly
             attributes: ['nombre']
         }]
     });
@@ -99,16 +101,16 @@ async function listarResumido() {
 // Listar productos resumido solo activos
 async function listarResumidoActivos() {
     const productos = await productoEntidad.findAll({
-        attributes: ['nombre', 'cantidad', 'precio_venta', 'id_categoria'],
+        attributes: ['nombre', 'cantidad', 'precio_venta'],
         where: { activo: true },
         include: [{
             model: categoriaEntidad,
-            attributes: ['nombre']
+            attributes: ['nombre'] // Incluye solo el nombre de la categoría
         }]
     });
     return productos.map(producto => ({
         nombre: producto.nombre,
-        id_categoria: producto.id_categoria,
+        categoria: producto.categorium?.nombre || "No tiene categoria", // Muestra el nombre de la categoría o null si no existe
         cantidad: producto.cantidad,
         precio_venta: producto.precio_venta
     }));
