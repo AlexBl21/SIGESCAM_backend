@@ -288,6 +288,22 @@ async function listarAdministradoras() {
     return usuarios;
 };
 
+async function validarCorreoExistente(email, dniActual) {
+    if (!email || email.trim() === "") {
+        throw new BadRequestError("El correo electrónico no puede estar vacío.");
+    }
+
+    const emailExistente = await usuarioEntidad.findOne({ 
+        where: { email: email }
+    });
+
+    if (emailExistente && emailExistente.dni !== dniActual) {
+        throw new BadRequestError("El correo electrónico ya está en uso por otro usuario.");
+    }
+
+    return { valido: true, mensaje: "El correo electrónico está disponible." };
+}
+
 //preferencia Notifi
 async function crearPreferencia(dni, tipo) {
     try {
@@ -301,5 +317,5 @@ async function crearPreferencia(dni, tipo) {
     }
 };
 
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras, validarCorreoExistente, crearPreferencia  };
 
-export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras, crearPreferencia };

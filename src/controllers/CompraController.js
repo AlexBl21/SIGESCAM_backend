@@ -2,8 +2,16 @@ import { obtenerHistorialCompras, filtrarComprasPorFecha, filtrarComprasPorProdu
 
 export async function verHistorialCompras(req, res) {
   try {
-    const compras = await obtenerHistorialCompras();
-    res.status(200).json(compras);
+    const resultado = await obtenerHistorialCompras();
+    if (resultado.compras.length === 0) {
+      return res.status(200).json({
+        message: "No hay registros de compras.",
+        totalGeneral: 0,
+        compras: []
+      });
+    }
+
+    res.status(200).json(resultado);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener el historial de compras" });
   }
@@ -25,8 +33,15 @@ export async function comprasPorFecha(req, res) {
       return res.status(400).json({ message: "La fecha de inicio no puede ser mayor a la fecha de fin" });
     }
 
-    const compras = await filtrarComprasPorFecha(fechaInicio, fechaFin);
-    res.status(200).json(compras);
+    const resultado = await filtrarComprasPorFecha(fechaInicio, fechaFin);
+    if (resultado.compras.length === 0) {
+      return res.status(200).json({
+        message: "No hay registros de compras.",
+        totalGeneral: 0,
+        compras: []
+      });
+    }
+    res.status(200).json(resultado);
   } catch (error) {
     res.status(500).json({ message: "Error al filtrar por fecha" });
   }
@@ -39,8 +54,15 @@ export async function comprasPorProducto(req, res) {
     if (!nombre) {
       return res.status(400).json({ message: "Debe proporcionar un nombre de producto" });
     }
-    const compras = await filtrarComprasPorProducto(nombre);
-    res.status(200).json(compras);
+    const resultado = await filtrarComprasPorProducto(nombre);
+    if (resultado.compras.length === 0) {
+      return res.status(200).json({
+        message: "No hay registros de compras.",
+        totalGeneral: 0,
+        compras: []
+      });
+    }
+    res.status(200).json(resultado);
   } catch (error) {
     res.status(500).json({ message: "Error al filtrar por producto" });
   }
@@ -61,10 +83,10 @@ export async function registrarCompra(req, res) {
     const compra = await registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, nombre_categoria, fecha_compra);
     res.status(201).json(compra);
   } catch (error) {
-    res.status(500).json({ 
-      message: "Error al registrar la compra", 
-      error: error.message, 
-      stack: error.stack 
+    res.status(500).json({
+      message: "Error al registrar la compra",
+      error: error.message,
+      stack: error.stack
     });
   }
 }
@@ -80,10 +102,10 @@ export async function eliminarCompra(req, res) {
     const resultado = await eliminar(id_compra);
     res.status(200).json(resultado);
   } catch (error) {
-    res.status(500).json({ 
-      message: "Error al eliminar la compra", 
-      error: error.message, 
-      stack: error.stack 
+    res.status(500).json({
+      message: "Error al eliminar la compra",
+      error: error.message,
+      stack: error.stack
     });
   }
 }
