@@ -26,7 +26,9 @@ import productoRoutes from "./routes/ProductoRoutes.js";
 import recuperarContrasenaRoutes from "./routes/RecuperarContrasenaRoutes.js";
 import cors from "cors";
 import notifiUsuarioRoutes from "./routes/NotificacionUsuarioRoutes.js";
+import preferenciaNotificacionRoutes from "./routes/PreferenciaNotiRoutes.js";
 import VentaService from "./services/VentaService.js";
+import preferenciaNotificacionService from "./services/PreferenciaNotificacionService.js";
 
 dotenv.config({
   path: "../.env"
@@ -60,6 +62,20 @@ app.use("/productos", productoRoutes);
 app.use("/compras", compraRoutes);
 app.use("/recuperar-contrasena", recuperarContrasenaRoutes);
 app.use("/notificaciones", notifiUsuarioRoutes );
+app.use("/preferenciaNotificacion", preferenciaNotificacionRoutes);
 //import UsuarioService from "./services/UsuarioService.js";
 //UsuarioService.listarGestoras();
 //VentaService.verificarStock();
+//import UsuarioService from "./services/UsuarioService.js";
+//const preferencia = await UsuarioService.crearPreferencia("0819", 1);
+/*
+try {
+  const preferencia = await PreferenciaNotificacionService.saberPreferencia("333333", 1);
+  if (preferencia != null) {
+    console.log("Preferencia encontrada:", preferencia);
+  } else {
+    console.log("No se encontró preferencia."); // ⚠️ Este no se ejecutará si hay error
+  }
+} catch (error) {
+  console.error("Ocurrió un error al obtener la preferencia:", error.message);
+}*/

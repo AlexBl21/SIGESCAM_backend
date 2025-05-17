@@ -6,7 +6,6 @@ import bcrypt from "bcrypt";
 
 async function registrar(req, res) {
     try {
-        console.log("Datos recibidos en el backend:", req.body);
         const usuario = await usuarioService.registrar(
             req.body.dni,
             req.body.nombre,
@@ -126,4 +125,16 @@ async function crearContrasena(req, res) {
     }
 }
 
-export default { registrar, listar, editar, cambioDeEstado, buscarPorId, crearContrasena }
+async function validarEmail(req, res) {
+    try {
+        const { email, dni } = req.body;
+        const resultado = await usuarioService.validarCorreoExistente(email, dni);
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
+
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId, crearContrasena, validarEmail }

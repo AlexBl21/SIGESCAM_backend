@@ -6,6 +6,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { enviarCorreo } from "../services/EmailService.js";
+import PreferenciaNotiService from "./PreferenciaNotificacionService.js";
+import PreferenciaNotificacion from "../models/PreferenciaNotificacion.js";
 
 //registrar un Usuario 
 async function registrar(dni, nombre, email, telefono, rol) {
@@ -41,6 +43,21 @@ async function registrar(dni, nombre, email, telefono, rol) {
             //para claves foraneas deben ver en el modelo como se llama ese campo: 
             id_rol: rol
         });
+
+        //Verifico que ya esté creado
+        if (!usuario?.dni) {
+                throw new InternalServerError ('Error al crear notificación de stock general');
+        };
+        //Creo de una la preferencia de notificacion
+        if(rolBuscado.id === "Administrador"){
+            await crearPreferencia(dni, 2);
+        }
+        else if(rolBuscado.id === "Gestor de ventas"){
+            console.log("entro en el if de gestor");
+           await crearPreferencia(dni, 1);
+            await crearPreferencia(dni, 2);
+        }
+        //Envio de correo
         const token = jwt.sign({ dni }, process.env.JWT_SECRET, { expiresIn: "48h" });
         console.log(token);
         const link = `${process.env.FRONTEND_URL}/establecer-contraseña/${token}`;
@@ -235,13 +252,17 @@ async function actualizarContraseña(dni, contraseñaHasheada) {
 
 async function listarGestoras() {
     const usuarios = await usuarioEntidad.findAll({
-        include: [{
-            model: rol,
-            where: {
-                id: 'Gestor de ventas'
+        include: [
+            {
+                model: rol,
+                where: { id: 'Gestor de ventas' },
+                required: true
             },
-            required: true
-        }]
+            {
+                model: PreferenciaNotificacion,
+                required: true 
+            }
+        ]
     });
     if (!usuarios) {
         throw new NotFoundError("No se encontraron usuarios");
@@ -252,12 +273,14 @@ async function listarGestoras() {
 async function listarAdministradoras() {
     const usuarios = await usuarioEntidad.findAll({
         include: [{
-            model: rol,
-            where: {
-                id: 'Administrador'
+                model: rol,
+                where: { id: 'Administrador' },
+                required: true
             },
-            required: true
-        }]
+            {
+                model: PreferenciaNotificacion,
+                required: true 
+            }]
     });
     if (!usuarios) {
         throw new NotFoundError("No se encontraron usuarios");
@@ -265,4 +288,34 @@ async function listarAdministradoras() {
     return usuarios;
 };
 
-export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras };
+async function validarCorreoExistente(email, dniActual) {
+    if (!email || email.trim() === "") {
+        throw new BadRequestError("El correo electrónico no puede estar vacío.");
+    }
+
+    const emailExistente = await usuarioEntidad.findOne({ 
+        where: { email: email }
+    });
+
+    if (emailExistente && emailExistente.dni !== dniActual) {
+        throw new BadRequestError("El correo electrónico ya está en uso por otro usuario.");
+    }
+
+    return { valido: true, mensaje: "El correo electrónico está disponible." };
+}
+
+//preferencia Notifi
+async function crearPreferencia(dni, tipo) {
+    try {
+        const preferencia = await PreferenciaNotiService.registrar(dni, tipo);
+        if(!preferencia){
+        throw new InternalServerError("Error al crear la preferencia");
+    }
+    return preferencia;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras, validarCorreoExistente, crearPreferencia  };
+
