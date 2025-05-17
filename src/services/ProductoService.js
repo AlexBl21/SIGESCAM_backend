@@ -6,7 +6,7 @@ import { Op } from "sequelize";
 import NotificacionService from "./NotificacionService.js";
 import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
 import UsuarioService from "./UsuarioService.js";
-
+import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
 //Registrar un Producto - USANDO EN EL FRONT
 export async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_categoria) {
     if (!nombre || !precio_compra || !precio_venta || !cantidad || !nombre_categoria) {
@@ -48,9 +48,12 @@ export async function registrar(nombre, precio_compra, precio_venta, cantidad, n
         const gestoras = await UsuarioService.listarGestoras();
         for (const gestora of gestoras) {
             try {
-                const nuevaNotiUsuario = await NotificacionUsuarioService.registrar(gestora.dni, nuevaNotificacion.id_notificacion);
-                if (!nuevaNotiUsuario) {
-                    throw new InternalServerError("No se pudo crear Notificación Usuario correctamente");
+                const preferencia = await PreferenciaNotificacionService.saberPreferencia(gestora.dni, 1);
+                if(preferencia){
+                    const nuevaNotiUsuario = await NotificacionUsuarioService.registrar(gestora.dni, nuevaNotificacion.id_notificacion);
+                    if (!nuevaNotiUsuario) {
+                        throw new InternalServerError("No se pudo crear Notificación Usuario correctamente");
+                    }
                 }
             } catch (error) {
                 throw error;

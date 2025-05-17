@@ -7,7 +7,7 @@ import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
 import UsuarioService from "./UsuarioService.js";
 import NotificacionService from "./NotificacionService.js";
 import { Op } from 'sequelize';
-
+import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
 async function registrarVenta() {
     
 }
@@ -32,9 +32,13 @@ async function verificarStock() {
             //por cada usuario creo la nfiticacion personal
             const usuarios = await UsuarioService.listar();
             for(const usuario of usuarios){
-                    const nuevaNotiUsuario= await NotificacionUsuarioService.registrar(usuario.dni , nuevaNotificacion.id_notificacion);
-                    if(!nuevaNotiUsuario){
-                        throw new InternalServerError("no se pudo crear Notificacion Usuario correctamente");
+                    //miro primero su preferencia de notificacion stock
+                    const preferencia = await PreferenciaNotificacionService.saberPreferencia(usuario.dni, 2);
+                    if(preferencia){
+                        const nuevaNotiUsuario= await NotificacionUsuarioService.registrar(usuario.dni , nuevaNotificacion.id_notificacion);
+                        if(!nuevaNotiUsuario){
+                            throw new InternalServerError("no se pudo crear Notificacion Usuario correctamente");
+                        }
                     }
             }
             

@@ -6,7 +6,6 @@ import bcrypt from "bcrypt";
 
 async function registrar(req, res) {
     try {
-        console.log("Datos recibidos en el backend:", req.body);
         const usuario = await usuarioService.registrar(
             req.body.dni,
             req.body.nombre,
