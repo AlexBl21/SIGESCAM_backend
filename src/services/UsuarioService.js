@@ -265,4 +265,20 @@ async function listarAdministradoras() {
     return usuarios;
 };
 
-export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras };
+async function validarCorreoExistente(email, dniActual) {
+    if (!email || email.trim() === "") {
+        throw new BadRequestError("El correo electrónico no puede estar vacío.");
+    }
+
+    const emailExistente = await usuarioEntidad.findOne({ 
+        where: { email: email }
+    });
+
+    if (emailExistente && emailExistente.dni !== dniActual) {
+        throw new BadRequestError("El correo electrónico ya está en uso por otro usuario.");
+    }
+
+    return { valido: true, mensaje: "El correo electrónico está disponible." };
+}
+
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras, validarCorreoExistente };

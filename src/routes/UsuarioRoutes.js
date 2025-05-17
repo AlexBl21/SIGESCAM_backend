@@ -12,4 +12,6 @@ router.get("/:dni", usuarioController.buscarPorId);
 router.put("/email/:dni", editarCorreo);
 //Registrar contraseña
 router.post("/crear-contrasena/:token", usuarioController.crearContrasena);
+//Validar email
+router.post("/validar-email", usuarioController.validarEmail);
 export default router;
