@@ -11,8 +11,8 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
 
     try {
         // Validar campos obligatorios
-        if (!dni_usuario || typeof dni_usuario !== "string" || dni_usuario.trim() === "") {
-            throw new BadRequestError("El DNI del usuario es obligatorio.");
+        if (dni_usuario === undefined || dni_usuario === null || isNaN(dni_usuario)) {
+            throw new BadRequestError("El DNI del usuario es obligatorio y debe ser un número.");
         }
         if (!nombre_producto || typeof nombre_producto !== "string" || nombre_producto.trim() === "") {
             throw new BadRequestError("El nombre del producto es obligatorio.");
