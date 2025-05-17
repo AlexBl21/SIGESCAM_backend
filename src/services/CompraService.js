@@ -10,19 +10,44 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
     const transaction = await Compra.sequelize.transaction(); // Iniciar una transacción
 
     try {
-        // Validar que los parámetros obligatorios no sean nulos o inválidos
-        if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !nombre_categoria || !fecha_compra) {
-            throw new BadRequestError("Todos los campos son obligatorios.");
+        // Validar campos obligatorios
+        if (!dni_usuario || typeof dni_usuario !== "string" || dni_usuario.trim() === "") {
+            throw new BadRequestError("El DNI del usuario es obligatorio.");
+        }
+        if (!nombre_producto || typeof nombre_producto !== "string" || nombre_producto.trim() === "") {
+            throw new BadRequestError("El nombre del producto es obligatorio.");
+        }
+        if (precio_compra === undefined || precio_compra === null || isNaN(precio_compra)) {
+            throw new BadRequestError("El precio de compra es obligatorio y debe ser un número.");
+        }
+        if (precio_venta === undefined || precio_venta === null || isNaN(precio_venta)) {
+            throw new BadRequestError("El precio de venta es obligatorio y debe ser un número.");
+        }
+        if (cantidad_agregar === undefined || cantidad_agregar === null || isNaN(cantidad_agregar)) {
+            throw new BadRequestError("La cantidad es obligatoria y debe ser un número.");
+        }
+        if (!nombre_categoria || typeof nombre_categoria !== "string" || nombre_categoria.trim() === "") {
+            throw new BadRequestError("El nombre de la categoría es obligatorio.");
+        }
+        if (!fecha_compra || isNaN(Date.parse(fecha_compra))) {
+            throw new BadRequestError("La fecha de compra es obligatoria y debe ser válida.");
         }
 
+        // Validaciones numéricas
         if (cantidad_agregar <= 0) {
             throw new BadRequestError("La cantidad debe ser mayor a cero.");
+        }
+        if (precio_compra < 0) {
+            throw new BadRequestError("El precio de compra no puede ser negativo.");
+        }
+        if (precio_venta < 0) {
+            throw new BadRequestError("El precio de venta no puede ser negativo.");
         }
 
         // Verificar si el usuario existe
         const usuario = await Usuario.findOne({ where: { dni: dni_usuario }, transaction });
         if (!usuario) {
-            throw new NotFoundError("El usuario no existe.");
+            throw new BadRequestError("El usuario no existe.");
         }
 
         // Buscar el producto por nombre
@@ -63,7 +88,8 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
         return compra;
     } catch (error) {
         await transaction.rollback(); // Revertir los cambios si ocurre un error
-        throw error;
+        // Retornar el mensaje de error personalizado para mostrar en el modal del front
+        throw new BadRequestError(error.message || "Error al registrar la compra.");
     }
 }
 
