@@ -72,17 +72,22 @@ export async function registrarCompra(req, res) {
   try {
     const { dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, nombre_categoria, fecha_compra } = req.body;
 
-    if (!dni_usuario || !nombre_producto || !precio_compra || !precio_venta || !cantidad_agregar || !nombre_categoria || !fecha_compra) {
-      return res.status(400).json({ message: "Todos los campos son obligatorios" });
-    }
-
-    if (cantidad_agregar <= 0) {
-      return res.status(400).json({ message: "La cantidad debe ser mayor a cero" });
-    }
-
-    const compra = await registrar(dni_usuario, nombre_producto, precio_compra, precio_venta, cantidad_agregar, nombre_categoria, fecha_compra);
+    // Ya no es necesario validar aquí, el service lo hace y retorna errores claros
+    const compra = await registrar(
+      dni_usuario,
+      nombre_producto,
+      precio_compra,
+      precio_venta,
+      cantidad_agregar,
+      nombre_categoria,
+      fecha_compra
+    );
     res.status(201).json(compra);
   } catch (error) {
+    // Si el error es de validación personalizada, devolver 400
+    if (error.name === "BadRequestError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({
       message: "Error al registrar la compra",
       error: error.message,

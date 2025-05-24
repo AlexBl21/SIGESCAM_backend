@@ -7,6 +7,7 @@ import NotificacionService from "./NotificacionService.js";
 import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
 import UsuarioService from "./UsuarioService.js";
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
+
 //Registrar un Producto - USANDO EN EL FRONT
 export async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_categoria) {
     if (!nombre || !precio_compra || !precio_venta || !cantidad || !nombre_categoria) {
@@ -103,23 +104,36 @@ async function listarResumido() {
 
 // Listar productos resumido solo activos - USANDO EN EL FRONT
 async function listarResumidoActivos() {
-    const productos = await productoEntidad.findAll({
-        attributes: ['nombre', 'cantidad', 'precio_venta'],
-        where: { activo: true },
-        include: [{
-            model: categoriaEntidad,
-            attributes: ['nombre'] // Incluye solo el nombre de la categoría
-        }]
-    });
-    return productos.map(producto => ({
-        nombre: producto.nombre,
-        categoria: producto.categorium?.nombre || "No tiene categoria", // Muestra el nombre de la categoría o null si no existe
-        cantidad: producto.cantidad,
-        precio_venta: producto.precio_venta
-    }));
+    try {
+        const productos = await productoEntidad.findAll({
+            attributes: ['nombre', 'cantidad', 'precio_venta'],
+            where: { activo: true },
+            include: [{
+                model: categoriaEntidad,
+                attributes: ['nombre'] // Incluye solo el nombre de la categoría
+            }]
+        });
+
+        if (!productos || productos.length === 0) {
+            throw new NotFoundError("No hay productos activos para mostrar");
+        }
+
+        return productos.map(producto => ({
+            nombre: producto.nombre,
+            categoria: producto.categorium?.nombre || "No tiene categoria", // Muestra el nombre de la categoría o null si no existe
+            cantidad: producto.cantidad,
+            precio_venta: producto.precio_venta
+        }));
+    } catch (error) {
+        // Puedes personalizar el mensaje para el modal del front
+        if (error instanceof NotFoundError) {
+            throw new NotFoundError("No se encontraron productos activos. Intente agregar productos o revise los filtros.");
+        }
+        throw new InternalServerError("Ocurrió un error al listar los productos activos. Intente nuevamente.");
+    }
 }
 
-// editar producto
+// Editar producto
 async function editar(id_producto, nombre, precio_venta, cantidad, id_categoria) {
     if (!id_producto || !nombre || !precio_venta || !cantidad || !id_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
@@ -151,8 +165,24 @@ async function editar(id_producto, nombre, precio_venta, cantidad, id_categoria)
 
 // Editar producto por nombre - USANDO EN EL FRONT
 async function editarPorNombre(nombre, nuevoNombre, precio_venta, nombre_categoria) {
-    if (!nombre || !nuevoNombre || !precio_venta || !nombre_categoria) {
-        throw new BadRequestError("Los datos no pueden estar vacíos");
+    // Validaciones de datos
+    if (!nombre || typeof nombre !== "string" || nombre.trim() === "") {
+        throw new BadRequestError("El nombre actual del producto no puede estar vacío");
+    }
+    if (!nuevoNombre || typeof nuevoNombre !== "string" || nuevoNombre.trim() === "") {
+        throw new BadRequestError("El nuevo nombre del producto no puede estar vacío");
+    }
+    if (nuevoNombre.length > 100) {
+        throw new BadRequestError("El nuevo nombre del producto es demasiado largo");
+    }
+    if (isNaN(precio_venta)) {
+        throw new BadRequestError("El precio de venta debe ser un número");
+    }
+    if (Number(precio_venta) < 0) {
+        throw new BadRequestError("El precio de venta no puede ser negativo");
+    }
+    if (!nombre_categoria || typeof nombre_categoria !== "string" || nombre_categoria.trim() === "") {
+        throw new BadRequestError("El nombre de la categoría no puede estar vacío");
     }
 
     try {
@@ -179,9 +209,15 @@ async function editarPorNombre(nombre, nuevoNombre, precio_venta, nombre_categor
         }, {
             where: { nombre: nombre }
         });
+
+        // Verifico si se actualizó algún producto
+        if (producto[0] === 0) {
+            throw new NotFoundError("No se encontró el producto para actualizar");
+        }
+
         return producto;
     } catch (error) {
-        console.log(error);
+        // El mensaje del error será mostrado en el modal del front
         throw error;
     }
 }
@@ -209,20 +245,48 @@ async function activarDesactivar(id_producto, activo) {
 
 // Activar o desactivar un producto por nombre - USANDO EN EL FRONT
 async function activarDesactivarPorNombre(nombre, activo) {
-    if (!nombre || activo === undefined) {
-        throw new BadRequestError("Los datos no pueden estar vacíos");
+    // Validaciones de datos
+    if (!nombre || typeof nombre !== "string" || nombre.trim() === "") {
+        throw new BadRequestError("El nombre del producto no puede estar vacío");
+    }
+    if (nombre.length > 100) {
+        throw new BadRequestError("El nombre del producto es demasiado largo");
+    }
+    // Fuerza el valor a booleano si viene como string "true"/"false"
+    if (typeof activo === "string") {
+        if (activo === "true") activo = true;
+        else if (activo === "false") activo = false;
+    }
+    if (typeof activo !== "boolean") {
+        throw new BadRequestError("El estado 'activo' debe ser un valor booleano");
     }
 
     try {
+        // Verifico si existe el producto
+        const productoExistente = await productoEntidad.findOne({ where: { nombre: nombre } });
+        if (!productoExistente) {
+            throw new NotFoundError("El producto no existe");
+        }
+
+        // Verifico si el estado ya es el mismo
+        if (productoExistente.activo === activo) {
+            throw new Conflict(`El producto ya está ${activo ? "activo" : "inactivo"}`);
+        }
+
         // Actualizo el estado del producto
-        const producto = await productoEntidad.update({
-            activo: activo
-        }, {
-            where: { nombre: nombre }
-        });
+        const producto = await productoEntidad.update(
+            { activo: activo },
+            { where: { nombre: nombre } }
+        );
+
+        // Verifico si se actualizó algún producto
+        if (producto[0] === 0) {
+            throw new NotFoundError("No se encontró el producto para actualizar");
+        }
+
         return producto;
     } catch (error) {
-        console.log(error);
+        // El mensaje del error será mostrado en el modal del front
         throw error;
     }
 }
@@ -250,7 +314,7 @@ async function eliminar(id_producto) {
     }
 }
 
-// Elimnar producto por nombre - USANDO EN EL FRONT
+// Elimnar producto por nombre
 async function eliminarPorNombre(nombre) {
     if (!nombre) {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
@@ -286,7 +350,7 @@ async function buscarPorId(id_producto) {
     return producto;
 }
 
-// Buscar producto por nombre - USANDO EN EL FRONT
+// Buscar producto por nombre
 async function buscarPorNombre(nombre) {
     if (!nombre) {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
@@ -303,8 +367,18 @@ async function buscarPorNombre(nombre) {
 
 // Buscar producto por nombre parecido solo activos - USANDO EN EL FRONT
 async function buscarPorNombreParecido(nombre) {
-    if (!nombre) {
+    // Validaciones de datos
+    if (nombre === undefined || nombre === null) {
+        throw new BadRequestError("El nombre del producto no puede ser nulo");
+    }
+    if (typeof nombre !== "string") {
+        throw new BadRequestError("El nombre del producto debe ser una cadena de texto");
+    }
+    if (nombre.trim() === "") {
         throw new BadRequestError("El nombre del producto no puede estar vacío");
+    }
+    if (nombre.length > 100) {
+        throw new BadRequestError("El nombre del producto es demasiado largo");
     }
 
     try {
@@ -321,6 +395,10 @@ async function buscarPorNombreParecido(nombre) {
             }]
         });
 
+        if (!productos || productos.length === 0) {
+            throw new NotFoundError("No se encontraron productos activos que coincidan con el nombre ingresado");
+        }
+
         return productos.map(producto => ({
             nombre: producto.nombre,
             categoria: producto.categorium?.nombre || "No tiene categoria", // Muestra el nombre de la categoría o null si no existe
@@ -328,7 +406,7 @@ async function buscarPorNombreParecido(nombre) {
             precio_venta: producto.precio_venta
         }));
     } catch (error) {
-        console.log(error);
+        // El mensaje del error será mostrado en el modal del front
         throw error;
     }
 }
@@ -387,6 +465,42 @@ async function filtrarPorCategoria(id_categoria) {
 
 // Filtrado de productos activos por cantidad, categoria y precio con múltiples filtros - USANDO EN EL FRONT
 async function filtrarPorCantidadCategoriaPrecio(cantidad, nombre_categoria, precio) {
+    // Validaciones de datos
+    if (
+        (cantidad === undefined || cantidad === null) &&
+        (nombre_categoria === undefined || nombre_categoria === null || nombre_categoria === "") &&
+        (precio === undefined || precio === null)
+    ) {
+        throw new BadRequestError("Debe ingresar al menos un filtro para buscar productos");
+    }
+
+    if (cantidad !== undefined && cantidad !== null) {
+        if (isNaN(cantidad)) {
+            throw new BadRequestError("La cantidad debe ser un número");
+        }
+        if (Number(cantidad) < 0) {
+            throw new BadRequestError("La cantidad no puede ser negativa");
+        }
+    }
+
+    if (nombre_categoria !== undefined && nombre_categoria !== null) {
+        if (typeof nombre_categoria !== "string" || nombre_categoria.trim() === "") {
+            throw new BadRequestError("El nombre de la categoría no puede estar vacío");
+        }
+        if (nombre_categoria.length > 100) {
+            throw new BadRequestError("El nombre de la categoría es demasiado largo");
+        }
+    }
+
+    if (precio !== undefined && precio !== null) {
+        if (isNaN(precio)) {
+            throw new BadRequestError("El precio debe ser un número");
+        }
+        if (Number(precio) < 0) {
+            throw new BadRequestError("El precio no puede ser negativo");
+        }
+    }
+
     try {
         const whereClauses = []; // Lista de condiciones WHERE
 
@@ -394,10 +508,10 @@ async function filtrarPorCantidadCategoriaPrecio(cantidad, nombre_categoria, pre
         whereClauses.push({ activo: true });
 
         if (cantidad !== null && cantidad !== undefined) {
-            whereClauses.push({ cantidad: { [Op.lte]: cantidad } }); // Productos con cantidad menor o igual
+            whereClauses.push({ cantidad: { [Op.lte]: Number(cantidad) } }); // Productos con cantidad menor o igual
         }
 
-        if (nombre_categoria !== null && nombre_categoria !== undefined) {
+        if (nombre_categoria !== null && nombre_categoria !== undefined && nombre_categoria.trim() !== "") {
             // Busco la categoría por su nombre
             const categoriaExistente = await categoriaEntidad.findOne({
                 where: { nombre: nombre_categoria }
@@ -421,6 +535,10 @@ async function filtrarPorCantidadCategoriaPrecio(cantidad, nombre_categoria, pre
             }]
         });
 
+        if (!productos || productos.length === 0) {
+            throw new NotFoundError("No se encontraron productos que coincidan con los filtros ingresados");
+        }
+
         return productos.map(producto => ({
             nombre: producto.nombre,
             categoria: producto.categorium?.nombre || "No tiene categoria", // Muestra el nombre de la categoría o null si no existe
@@ -428,7 +546,7 @@ async function filtrarPorCantidadCategoriaPrecio(cantidad, nombre_categoria, pre
             precio_venta: producto.precio_venta
         }));
     } catch (error) {
-        console.log(error);
+        // El mensaje del error será mostrado en el modal del front
         throw error;
     }
 }

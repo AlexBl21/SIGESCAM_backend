@@ -53,6 +53,9 @@ async function listarResumidoActivos(req, res) {
         const productos = await ProductoService.listarResumidoActivos();
         res.status(200).json(productos);
     } catch (error) {
+        if (error.name === "NotFoundError") {
+            return res.status(404).json({ message: error.message });
+        }
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
         });
@@ -85,10 +88,6 @@ async function editarPorNombre(req, res) {
     try {
         const { nombre } = req.params;
         const { nuevoNombre, precio_venta, nombre_categoria } = req.body;
-
-        if (!nombre || !nuevoNombre || !precio_venta || !nombre_categoria) {
-            return res.status(400).json({ message: "Los datos no pueden estar vacíos" });
-        }
 
         const producto = await ProductoService.editarPorNombre(
             nombre,
@@ -124,9 +123,11 @@ async function activarDesactivar(req, res) {
 async function activarDesactivarPorNombre(req, res) {
     try {
         const nombre = req.params.nombre;
+        const { activo } = req.body;
+
         const producto = await ProductoService.activarDesactivarPorNombre(
             nombre,
-            req.body.activo
+            activo
         );
         res.status(200).json(producto);
     } catch (error) {
@@ -198,14 +199,11 @@ async function buscarPorNombre(req, res) {
 async function buscarPorNombreParecido(req, res) {
     try {
         const nombre = req.params.nombre;
-        if (!nombre) {
-            return res.status(400).json({ message: "El nombre del producto no puede estar vacío" });
-        }
         const productos = await ProductoService.buscarPorNombreParecido(nombre);
         res.status(200).json(productos);
     } catch (error) {
         res.status(error.statusCode || 500).json({
-            message: error.message || "Error interno del servidor"
+            message: error.message
         });
     }
 }
@@ -246,6 +244,7 @@ async function filtrarPorCantidadCategoriaPrecio(req, res) {
         const productos = await ProductoService.filtrarPorCantidadCategoriaPrecio(cantidad, nombre_categoria, precio);
         res.status(200).json(productos);
     } catch (error) {
+        // Devuelve el mensaje de error personalizado si existe
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
         });

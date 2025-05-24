@@ -55,7 +55,7 @@ app.listen(process.env.PUERTO, () => {
   console.log(`escuchando en http://localhost:${process.env.PUERTO}`);
 });
 
-VentaLotes.sync();
+
 /*
 //funcion para la creación de las tablas 
 async function main(){
