@@ -13,6 +13,6 @@ const sequelize = new Sequelize(process.env.MYSQL_URL, {
 const sequelize = new Sequelize("sigescam", "root", "", {
     host: "localhost",
     dialect: "mysql"
-  });
-  */
+  });*/
+  
  export default sequelize;

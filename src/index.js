@@ -16,7 +16,7 @@ import TipoNotificacion from "./models/TipoNotificacion.js";
 import PreferenciaNotificacion from "./models/PreferenciaNotificacion.js";
 import Sugerencia from "./models/Sugerencia.js";
 import NotificacionUsuario from "./models/NotificacionUsuario.js";
-
+import VentaLotes from "./models/VentaLotes.js";
 import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
 import usuarioRoutes from "./routes/UsuarioRoutes.js";
 import loginRoutes from "./routes/LoginRoutes.js";
@@ -55,6 +55,21 @@ app.listen(process.env.PUERTO, () => {
   console.log(`escuchando en http://localhost:${process.env.PUERTO}`);
 });
 
+VentaLotes.sync();
+/*
+//funcion para la creación de las tablas 
+async function main(){
+    try{
+        await db.sync({force: true});
+        console.log("Tablas creadas exitosamente B)")
+    }catch(error){
+      console.log(error.message);
+    }
+  }
+
+  main();
+*/
+
 app.use("/sugerencias", SugerenciaRoutes);
 app.use("/usuarios", usuarioRoutes);
 app.use("/login", loginRoutes);
@@ -74,7 +89,7 @@ try {
   if (preferencia != null) {
     console.log("Preferencia encontrada:", preferencia);
   } else {
-    console.log("No se encontró preferencia."); // ⚠️ Este no se ejecutará si hay error
+    console.log("No se encontró preferencia."); // 
   }
 } catch (error) {
   console.error("Ocurrió un error al obtener la preferencia:", error.message);
