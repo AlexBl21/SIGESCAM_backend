@@ -4,8 +4,9 @@ import Compra from "./Compra.js";
 import DetalleVenta from "./DetalleVenta.js";
 
 const VentaLotes = db.define("venta_lotes", {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-    cantidad_usada: { type: DataTypes.INTEGER, allowNull: false}
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    cantidad_usada: { type: DataTypes.INTEGER, allowNull: false },
+    precio_compra: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
 }, {
     timestamps: false,
     freezeTableName: true
@@ -20,11 +21,11 @@ VentaLotes.belongsTo(Compra, {
 })
 
 //relacion con detalle de Venta
-DetalleVenta.hasMany(VentaLotes,{
+DetalleVenta.hasMany(VentaLotes, {
     foreignKey: "id_detalle_venta"
 });
 VentaLotes.belongsTo(DetalleVenta, {
     foreignKey: "id_detalle_venta"
-}); 
+});
 
 export default VentaLotes;
