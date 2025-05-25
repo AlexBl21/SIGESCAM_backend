@@ -6,7 +6,9 @@ import Producto from "./Producto.js";
 const DetalleVenta = db.define("detalle_venta",{
     id_detalle_venta: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true}, 
     cantidad: { type: DataTypes.INTEGER, allowNull: false}, 
-    precio: { type: DataTypes.DECIMAL(10, 2), allowNull: false}, 
+    precio_venta: { type: DataTypes.DECIMAL(10, 2), allowNull: false},
+    costo_total: { type: DataTypes.DECIMAL(10, 2), allowNull: false}, 
+    ganancia: { type: DataTypes.DECIMAL(10, 2), allowNull: false},
 }, {
     timestamps: false, 
     freezeTableName: true

@@ -251,6 +251,17 @@ async function filtrarPorCantidadCategoriaPrecio(req, res) {
     }
 }
 
+async function autocompletarProductos(req, res) {
+    try {
+        const { nombre } = req.query;
+        const productos = await ProductoService.buscarProductosActivosPorNombre(nombre);
+        return res.json(productos);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error al buscar productos." });
+    }
+}
+
 export default {
     registrar,
     listar,
@@ -267,5 +278,6 @@ export default {
     buscarPorNombreParecido,
     obtenerCantidadPorNombre,
     filtrarPorCategoria,
-    filtrarPorCantidadCategoriaPrecio
+    filtrarPorCantidadCategoriaPrecio,
+    autocompletarProductos
 };

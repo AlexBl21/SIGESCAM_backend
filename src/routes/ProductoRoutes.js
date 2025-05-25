@@ -20,5 +20,6 @@ router.get("/nombre_parecido/:nombre", ProductoController.buscarPorNombreParecid
 router.get("/cantidad/:nombre", ProductoController.obtenerCantidadPorNombre);
 router.get("/categoria/:id_categoria", ProductoController.filtrarPorCategoria);
 router.get("/cantidad_categoria_precio", ProductoController.filtrarPorCantidadCategoriaPrecio);
+router.get("/autocompletar", ProductoController.autocompletarProductos);
 
 export default router;

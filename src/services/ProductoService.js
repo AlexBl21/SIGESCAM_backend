@@ -50,7 +50,7 @@ export async function registrar(nombre, precio_compra, precio_venta, cantidad, n
         for (const gestora of gestoras) {
             try {
                 const preferencia = await PreferenciaNotificacionService.saberPreferencia(gestora.dni, 1);
-                if(preferencia){
+                if (preferencia) {
                     const nuevaNotiUsuario = await NotificacionUsuarioService.registrar(gestora.dni, nuevaNotificacion.id_notificacion);
                     if (!nuevaNotiUsuario) {
                         throw new InternalServerError("No se pudo crear Notificación Usuario correctamente");
@@ -551,6 +551,22 @@ async function filtrarPorCantidadCategoriaPrecio(cantidad, nombre_categoria, pre
     }
 }
 
+async function buscarProductosActivosPorNombre(nombreParcial) {
+    if (!nombreParcial || nombreParcial.trim() === "") return [];
+
+    const productos = await productoEntidad.findAll({
+        where: {
+            nombre: {
+                [Op.like]: `${nombreParcial}%`
+            },
+            activo: true
+        },
+        limit: 10
+    });
+
+    return productos;
+}
+
 export default {
     registrar,
     existeProducto,
@@ -569,5 +585,6 @@ export default {
     obtenerCantidadPorNombre,
     editarCantidad,
     filtrarPorCategoria,
-    filtrarPorCantidadCategoriaPrecio
+    filtrarPorCantidadCategoriaPrecio,
+    buscarProductosActivosPorNombre
 };
