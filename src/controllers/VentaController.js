@@ -68,12 +68,27 @@ async function detallesDeUnaVentaFiada(req, res){
         res.status(error.statusCode || 500).json({ message: "Error al obtener deatlle de la venta", error: error.message });
     }
 }
+
+// Obtener historial estadístico de ventas con abono
+async function historialEstadisticoVentasConAbono(req, res) {
+    try {
+        const resultado = await VentaService.obtenerHistorialEstadisticoVentasConAbono();
+        res.status(200).json(resultado);
+    } catch (error) {
+        // Si el error es una validación personalizada, devolver el mensaje específico
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener el historial estadístico de ventas con abono"
+        });
+    }
+}
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
     obtenerVentasDelDia,
     top3ProductosSemana,
     ventasFiadas, 
-    detallesDeUnaVentaFiada
+    detallesDeUnaVentaFiada,
+    historialEstadisticoVentasConAbono
 };
 

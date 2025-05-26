@@ -354,8 +354,100 @@ function calcularTotalAbonos(abonos) {
 }
 
 // Obtener historial estadístico de ventas con abono
+async function obtenerHistorialEstadisticoVentasConAbono() {
+    // Traer todos los detalles de venta junto con la venta, producto y abonos
+    const detalles = await DetalleVenta.findAll({
+        include: [
+            {
+                model: Venta,
+                as: 'ventum', // Si la relación se llama 'ventum'
+                attributes: ['es_fiado', 'id_venta'],
+                include: [
+                    {
+                        model: Abono,
+                        attributes: ['monto_abono', 'id_venta']
+                    }
+                ]
+            },
+            {
+                model: Producto,
+                attributes: ['nombre']
+            }
+        ],
+        attributes: ['id_producto', 'cantidad', 'precio']
+    });
+
+    if (!Array.isArray(detalles)) {
+        throw new InternalServerError("La consulta de detalles de venta no devolvió un arreglo.");
+    }
+    if (detalles.length === 0) {
+        throw new NotFoundError("No se encontraron detalles de ventas con abono.");
+    }
+
+    // Agrupar por producto y precio
+    const agrupados = {};
+
+    for (const detalle of detalles) {
+        if (!detalle || typeof detalle !== 'object') continue;
+        if (!detalle.producto) continue;
+        if (!detalle.ventum) continue;
+        if (typeof detalle.id_producto === 'undefined' || typeof detalle.precio === 'undefined') continue;
+        if (typeof detalle.cantidad !== 'number' || detalle.cantidad < 0) continue;
+
+        const key = `${detalle.id_producto}_${detalle.precio}`;
+        if (!agrupados[key]) {
+            agrupados[key] = {
+                nombre: detalle.producto.nombre,
+                cantidad: 0,
+                precioVenta: detalle.precio,
+                estado: detalle.ventum.es_fiado ? 'Pendiente' : 'Pagado',
+                dineroPagado: 0,
+                abono: 0
+            };
+        }
+        agrupados[key].cantidad += detalle.cantidad;
+
+        if (detalle.ventum.es_fiado) {
+            agrupados[key].dineroPagado += 0;
+            // Sumar abonos solo de este producto, precio y venta
+            if (
+                Array.isArray(detalle.ventum.abonos) &&
+                detalle.ventum.abonos.length > 0
+            ) {
+                // Como Abono no tiene id_producto ni precio, sumamos todos los abonos de la venta
+                const abonosFiltrados = detalle.ventum.abonos.filter(
+                    ab =>
+                        ab &&
+                        typeof ab.monto_abono !== 'undefined'
+                );
+                agrupados[key].abono += abonosFiltrados.reduce(
+                    (sum, ab) => sum + parseFloat(ab.monto_abono || 0),
+                    0
+                );
+            }
+        } else {
+            agrupados[key].dineroPagado += (detalle.precio || 0) * (detalle.cantidad || 0);
+            agrupados[key].abono += 0;
+        }
+    }
+
+    const productos = Object.values(agrupados);
+
+    // Calcular totales
+    const totalDineroPagado = productos.reduce((sum, p) => sum + (p.dineroPagado || 0), 0);
+    const totalAbonos = productos.reduce((sum, p) => sum + (p.abono || 0), 0);
+
+    return {
+        productos,
+        total: {
+            dineroPagado: totalDineroPagado,
+            abono: totalAbonos,
+            general: totalDineroPagado + totalAbonos
+        }
+    };
+}
 
 export default {
     registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana, ventasFiadas,
-    detallesDeUnaVentaFiada
+    detallesDeUnaVentaFiada, obtenerHistorialEstadisticoVentasConAbono
 };
