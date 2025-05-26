@@ -8,7 +8,7 @@ const DetalleVenta = db.define("detalle_venta",{
     cantidad: { type: DataTypes.INTEGER, allowNull: false}, 
     precio_venta: { type: DataTypes.DECIMAL(10, 2), allowNull: false},
     costo_total: { type: DataTypes.DECIMAL(10, 2), allowNull: false}, 
-    ganancia: { type: DataTypes.DECIMAL(10, 2), allowNull: false},
+    ganancia: { type: DataTypes.DECIMAL(10, 2)},
 }, {
     timestamps: false, 
     freezeTableName: true
