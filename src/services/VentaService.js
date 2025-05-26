@@ -354,5 +354,7 @@ function calcularTotalAbonos(abonos){
     return total;
 }
 
+// Obtener historial estadístico de ventas con abono
+
 export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,  ventasFiadas, 
     detallesDeUnaVentaFiada };
