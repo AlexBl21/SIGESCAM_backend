@@ -36,8 +36,23 @@ export const obtenerVentasDelDia = async (req, res, next) => {
     }
 };
 
+// Obtener historial estadístico de ventas con dinero recibido
+export const obtenerHistorialVentasConAbono = async (req, res, next) => {
+    try {
+        const resultado = await VentaService.obtenerHistorialVentasConAbono();
+        if (resultado.mensaje) {
+            // Si el service retorna un mensaje de error, responder con 400 y el mensaje
+            return res.status(400).json({ mensaje: resultado.mensaje });
+        }
+        res.status(200).json(resultado);
+    } catch (error) {
+        next(error);
+    }
+};
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
-    obtenerVentasDelDia
+    obtenerVentasDelDia,
+    obtenerHistorialVentasConAbono
 };

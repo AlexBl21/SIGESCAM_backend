@@ -12,6 +12,7 @@ import UsuarioService from "./UsuarioService.js";
 import NotificacionService from "./NotificacionService.js";
 import { Op } from 'sequelize';
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
+import Abono from "../models/Abono.js"; // Asegúrate de tener el modelo Abono
 
 async function verificarStock() {
     try {
@@ -202,6 +203,79 @@ async function obtenerVentasDelDia() {
     return cantidadVentas;
 }
 
+// Obtener historial estadístico de ventas con dinero recibido
 
+async function obtenerHistorialVentasConAbono() {
+    try {
+        // Traer detalles de ventas, productos y ventas asociadas
+        const detalles = await DetalleVenta.findAll({
+            include: [
+                {
+                    model: Producto,
+                    attributes: ['nombre'],
+                },
+                {
+                    model: Venta,
+                    attributes: ['fecha_venta', 'es_fiado', 'id_venta'],
+                }
+            ]
+        });
 
-export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia };
+        if (!detalles || detalles.length === 0) {
+            return { mensaje: "No hay detalles de ventas registrados en la base de datos.", historial: [], totalAbono: 0 };
+        }
+
+        let totalAbono = 0;
+        const historial = [];
+
+        for (const detalle of detalles) {
+            const producto = detalle.producto;
+            const venta = detalle.ventum;
+            if (!producto) {
+                return { mensaje: `Error: No se encontró el producto con id_producto=${detalle.id_producto} para el detalle de venta id_detalle_venta=${detalle.id_detalle_venta}.`, historial: [], totalAbono: 0 };
+            }
+            if (!venta) {
+                return { mensaje: `Error: No se encontró la venta con id_venta=${detalle.id_venta} para el detalle de venta id_detalle_venta=${detalle.id_detalle_venta}.`, historial: [], totalAbono: 0 };
+            }
+            const cantidad = detalle.cantidad;
+            const precioVenta = detalle.precio_venta;
+            const totalVenta = cantidad * precioVenta;
+            let abono = 0;
+            let estado = venta.es_fiado ? 'Pendiente' : 'Pagado';
+
+            if (estado === 'Pagado') {
+                abono = 0;
+            } else {
+                // Buscar abonos asociados a la venta
+                const abonos = await Abono.findAll({
+                    where: { id_venta: venta.id_venta }
+                });
+                if (!abonos) {
+                    return { mensaje: `Error: No se pudieron obtener abonos para la venta fiada con id_venta=${venta.id_venta}.`, historial: [], totalAbono: 0 };
+                }
+                abono = abonos.reduce((sum, abono) => sum + abono.monto, 0);
+            }
+
+            totalAbono += abono;
+
+            historial.push({
+                nombreProducto: producto.nombre,
+                cantidadVendida: cantidad,
+                precioVenta,
+                fechaVenta: venta.fecha_venta,
+                estado,
+                totalVenta,
+                abono
+            });
+        }
+
+        return {
+            historial,
+            totalAbono
+        };
+    } catch (error) {
+        return { mensaje: `Ocurrió un error inesperado al obtener el historial de ventas: ${error.message}`, historial: [], totalAbono: 0 };
+    }
+}
+
+export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerHistorialVentasConAbono };
