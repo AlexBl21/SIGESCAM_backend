@@ -407,14 +407,13 @@ async function obtenerHistorialEstadisticoVentasConAbono() {
         }
         agrupados[key].cantidad += detalle.cantidad;
 
+        // Sumar abonos solo de este producto, precio y venta
         if (detalle.ventum.es_fiado) {
-            agrupados[key].dineroPagado += 0;
-            // Sumar abonos solo de este producto, precio y venta
+            // Como Abono no tiene id_producto ni precio, sumamos todos los abonos de la venta
             if (
                 Array.isArray(detalle.ventum.abonos) &&
                 detalle.ventum.abonos.length > 0
             ) {
-                // Como Abono no tiene id_producto ni precio, sumamos todos los abonos de la venta
                 const abonosFiltrados = detalle.ventum.abonos.filter(
                     ab =>
                         ab &&
@@ -425,9 +424,13 @@ async function obtenerHistorialEstadisticoVentasConAbono() {
                     0
                 );
             }
-        } else {
-            agrupados[key].dineroPagado += (detalle.precio || 0) * (detalle.cantidad || 0);
-            agrupados[key].abono += 0;
+        }
+    }
+
+    // Ahora calcular dineroPagado correctamente multiplicando cantidad total * precioVenta solo para los pagados
+    for (const key in agrupados) {
+        if (agrupados[key].estado === 'Pagado') {
+            agrupados[key].dineroPagado = agrupados[key].cantidad * parseFloat(agrupados[key].precioVenta);
         }
     }
 
