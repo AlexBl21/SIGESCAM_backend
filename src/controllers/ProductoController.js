@@ -2,14 +2,15 @@ import ProductoService from "../services/ProductoService.js";
 
 async function registrar(req, res) {
     try {
-        const { nombre, precio_venta, cantidad, nombre_categoria } = req.body;
+        const { nombre, precio_compra, precio_venta, cantidad, nombre_categoria } = req.body;
 
-        if (!nombre || !precio_venta || !cantidad || !nombre_categoria) {
+        if (!nombre || !precio_compra || !precio_venta || !cantidad || !nombre_categoria) {
             return res.status(400).json({ message: "Los datos no pueden estar vacíos" });
         }
 
         const producto = await ProductoService.registrar(
             nombre,
+            precio_compra,
             precio_venta,
             cantidad,
             nombre_categoria

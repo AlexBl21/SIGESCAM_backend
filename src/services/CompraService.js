@@ -68,6 +68,7 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
             // Si el producto no existe, registrarlo utilizando el método registrar de ProductoService
             producto = await registrarProducto(
                 nombre_producto,
+                precio_compra,
                 precio_venta,
                 cantidad_agregar,
                 nombre_categoria

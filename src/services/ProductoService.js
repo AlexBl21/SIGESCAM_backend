@@ -9,8 +9,8 @@ import UsuarioService from "./UsuarioService.js";
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
 
 //Registrar un Producto - USANDO EN EL FRONT
-export async function registrar(nombre, precio_venta, cantidad, nombre_categoria) {
-    if (!nombre || !precio_venta || !cantidad || !nombre_categoria) {
+export async function registrar(nombre, precio_compra, precio_venta, cantidad, nombre_categoria) {
+    if (!nombre || !precio_compra || !precio_venta || !cantidad || !nombre_categoria) {
         throw new BadRequestError("Los datos no pueden estar vacíos");
     }
 
@@ -32,6 +32,7 @@ export async function registrar(nombre, precio_venta, cantidad, nombre_categoria
         // Creo el producto con los datos que necesito
         const producto = await productoEntidad.create({
             nombre: nombre,
+            precio_compra: precio_compra,
             precio_venta: precio_venta,
             cantidad: cantidad,
             id_categoria: categoriaExistente.id_categoria,
