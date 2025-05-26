@@ -29,7 +29,7 @@ import notifiUsuarioRoutes from "./routes/NotificacionUsuarioRoutes.js";
 import preferenciaNotificacionRoutes from "./routes/PreferenciaNotiRoutes.js";
 import ventaRoutes from "./routes/VentaRoutes.js";
 import DeudorRoutes from "./routes/DeudorRoutes.js";
-import DetallesVentaRoutes from "./routes/DetallesVentaRoutes.js";
+
 
 dotenv.config({
   path: "../.env"
@@ -81,7 +81,7 @@ app.use("/notificaciones", notifiUsuarioRoutes);
 app.use("/preferenciaNotificacion", preferenciaNotificacionRoutes);
 app.use("/ventas", ventaRoutes);
 app.use("/deudor", DeudorRoutes);
-app.use("/detallesVenta", DetallesVentaRoutes);
+
 
 //import UsuarioService from "./services/UsuarioService.js";
 //UsuarioService.listarGestoras();
@@ -99,11 +99,3 @@ try {
 } catch (error) {
   console.error("Ocurrió un error al obtener la preferencia:", error.message);
 }*/
-/*
-import DetalleVentaService from "./services/DetalleVentaService.js";
-const detalles = await DetalleVentaService.detallesDeUnaVentaFiada(1);
-console.log(detalles);*/
-/*
-import VentaService from "./services/VentaService.js";
-const detalles = await VentaService.detallesDeUnaVentaFiada(1);
-console.log(detalles);*/
