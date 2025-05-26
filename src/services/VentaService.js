@@ -10,8 +10,9 @@ import { where } from "sequelize";
 import NotificacionUsuarioService from "./NotificacionUsuarioService.js";
 import UsuarioService from "./UsuarioService.js";
 import NotificacionService from "./NotificacionService.js";
-import { Op } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
+import sequelize from "../db/db.js";
 
 async function verificarStock() {
     try {
@@ -76,7 +77,7 @@ async function agregarProductoAVentaTemporal({ nombreProducto, cantidad }) {
     const lotes = await Compra.findAll({
         where: {
             id_producto: producto.id_producto,
-            cantidad_disponible: { [sequelize.Op.gt]: 0 }
+            cantidad_disponible: { [Op.gt]: 0 }
         },
         order: [['fecha_compra', 'ASC']]
     });
@@ -121,21 +122,51 @@ async function agregarProductoAVentaTemporal({ nombreProducto, cantidad }) {
 }
 
 async function registrarVenta({ productos, dni_usuario, deudor, es_fiado, fecha }) {
-
     if (!productos || productos.length === 0) {
         throw new BadRequestError("La venta debe contener al menos un producto");
     }
 
     return await sequelize.transaction(async (t) => {
+        let deudorDB = null;
+
+        if (es_fiado) {
+            if (!deudor?.dni || !deudor?.nombre || !deudor?.telefono) {
+                throw new BadRequestError("Se debe completar todos los datos del deudor.");
+            }
+            deudorDB = await Deudor.findOne({
+                where: { dni_deudor: deudor.dni },
+                transaction: t
+            });
+            console.log("Deudor encontrado:", deudorDB);
+            if (!deudorDB) {
+                deudorDB = await Deudor.create({
+                    dni_deudor: deudor.dni,
+                    nombre: deudor.nombre,
+                    telefono: deudor.telefono,
+                    monto_total: 0,
+                    monto_pendiente: 0,
+                    pagado: false
+                }, { transaction: t });
+            }
+        }
+
 
         const total = productos.reduce((sum, p) => sum + (p.precioVenta * p.cantidad), 0);
+        console.log("Total de la venta:", total);
         const nuevaVenta = await Venta.create({
             fecha_venta: fecha ? new Date(fecha) : new Date(),
             total,
             es_fiado,
             dni_usuario,
-            dni_deudor: es_fiado ? deudor.dni : null
+            dni_deudor: es_fiado ? deudorDB.dni_deudor : null
         }, { transaction: t });
+
+
+        if (es_fiado) {
+            deudorDB.monto_total = Number(deudorDB.monto_total) + Number(total);
+            deudorDB.monto_pendiente = Number(deudorDB.monto_pendiente) + Number(total);
+            await deudorDB.save({ transaction: t });
+        }
 
         for (const producto of productos) {
             const detalle = await DetalleVenta.create({
@@ -160,26 +191,13 @@ async function registrarVenta({ productos, dni_usuario, deudor, es_fiado, fecha 
                 compra.cantidad_disponible -= lote.cantidad;
                 await compra.save({ transaction: t });
             }
+
+            const productoDB = await Producto.findByPk(producto.idProducto);
+            productoDB.cantidad -= producto.cantidad;
+            await productoDB.save({ transaction: t });
         }
 
-        if (es_fiado && deudor?.dni && deudor?.nombre && deudor?.telefono) {
-            const existente = await Deudor.findByPk(deudor.dni);
 
-            if (existente) {
-                existente.monto_total += total;
-                existente.monto_pendiente += total;
-                await existente.save({ transaction: t });
-            } else {
-                await Deudor.create({
-                    dni_deudor: deudor.dni,
-                    nombre: deudor.nombre,
-                    telefono: deudor.telefono,
-                    monto_total: total,
-                    monto_pendiente: total,
-                    pagado: false
-                }, { transaction: t });
-            }
-        }
         await verificarStock();
 
         return nuevaVenta;
@@ -188,13 +206,25 @@ async function registrarVenta({ productos, dni_usuario, deudor, es_fiado, fecha 
 
 async function obtenerVentasDelDia() {
     const hoy = new Date();
-    const inicioDelDia = new Date(hoy.setHours(0, 0, 0, 0));
-    const finDelDia = new Date(hoy.setHours(23, 59, 59, 999));
+
+    const inicioDelDiaUTC = new Date(Date.UTC(
+        hoy.getUTCFullYear(),
+        hoy.getUTCMonth(),
+        hoy.getUTCDate(),
+        0, 0, 0, 0
+    ));
+
+    const finDelDiaUTC = new Date(Date.UTC(
+        hoy.getUTCFullYear(),
+        hoy.getUTCMonth(),
+        hoy.getUTCDate(),
+        23, 59, 59, 999
+    ));
 
     const cantidadVentas = await Venta.count({
         where: {
             fecha_venta: {
-                [Op.between]: [inicioDelDia, finDelDia]
+                [Op.between]: [inicioDelDiaUTC, finDelDiaUTC]
             }
         }
     });
@@ -202,6 +232,59 @@ async function obtenerVentasDelDia() {
     return cantidadVentas;
 }
 
+async function obtenerTop3ProductosMasVendidosDeLaSemana() {
+    const hoy = new Date();
 
 
-export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia };
+    const diaSemana = hoy.getUTCDay();
+    const diffALunes = diaSemana === 0 ? 6 : diaSemana - 1; // si es domingo, retrocedemos 6 días, sino cuantos días desde lunes
+    const inicioSemanaUTC = new Date(Date.UTC(
+        hoy.getUTCFullYear(),
+        hoy.getUTCMonth(),
+        hoy.getUTCDate() - diffALunes,
+        0, 0, 0, 0
+    ));
+
+    const finSemanaUTC = new Date(Date.UTC(
+        inicioSemanaUTC.getUTCFullYear(),
+        inicioSemanaUTC.getUTCMonth(),
+        inicioSemanaUTC.getUTCDate() + 6,
+        23, 59, 59, 999
+    ));
+
+    const resultados = await DetalleVenta.findAll({
+        attributes: [
+            'id_producto',
+            [fn('SUM', col('detalle_venta.cantidad')), 'total_vendido']
+        ],
+        include: [
+            {
+                model: Venta,
+                required: true,
+                attributes: [],
+                where: {
+                    fecha_venta: {
+                        [Op.between]: [inicioSemanaUTC, finSemanaUTC]
+                    }
+                }
+            },
+            {
+                model: Producto,
+                required: true,
+                attributes: ['nombre']
+            }
+        ],
+        group: ['detalle_venta.id_producto', 'producto.id_producto', 'producto.nombre'],
+        order: [[literal('total_vendido'), 'DESC']],
+        limit: 3
+    });
+
+    return resultados.map(r => ({
+        idProducto: r.id_producto,
+        nombre: r.producto.nombre,
+        totalVendido: Number(r.get('total_vendido'))
+    }));
+}
+
+
+export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana };
