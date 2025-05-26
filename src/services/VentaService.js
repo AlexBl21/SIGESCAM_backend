@@ -11,6 +11,8 @@ import NotificacionService from "./NotificacionService.js";
 import { Op, fn, col, literal } from 'sequelize';
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
 import sequelize from "../db/db.js";
+import Abono from "../models/Abono.js";
+
 
 async function verificarStock() {
     try {
@@ -242,4 +244,114 @@ async function obtenerTop3ProductosMasVendidosDeLaSemana() {
 }
 
 
-export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana };
+//listar ventas fiadas (sin pagar) del deudor
+async function ventasFiadas(dni_deudor) {
+    try {
+        const ventasConDeuda = await Venta.findAll({
+            where: {
+                dni_deudor: dni_deudor,
+                es_fiado: true
+            },
+            include: [
+                {
+                    model: Abono,
+                    attributes: ['id_abono', 'monto_abono', 'fecha_abono']
+                }
+            ],
+            attributes: ['id_venta', 'total', 'es_fiado', 'fecha_venta']
+        });
+
+        if (!ventasConDeuda || ventasConDeuda.length === 0) {
+            throw new Error("No se encontraron deudas para el cliente");
+        }
+        // Procesar cada venta para calcular monto pendiente
+        const resultado = ventasConDeuda.map(venta => {
+            const totalVenta = parseFloat(venta.total);
+            const sumaAbonos = venta.abonos.reduce((acc, abono) => acc + parseFloat(abono.monto_abono), 0);
+            const montoPendiente = totalVenta - sumaAbonos;
+
+            return {
+                id_venta: venta.id_venta,
+                fecha_venta: venta.fecha_venta,
+                monto_pendiente: montoPendiente
+            };
+        });
+
+        return resultado;
+    } catch (error) {
+        throw {
+            message: "Error al obtener ventas fiadas",
+            error: error.message
+        };
+    }
+}
+
+//Obtener detalles de cierta venta, solo para fiadas
+async function detallesDeUnaVentaFiada(idVenta) {
+    if(!idVenta){
+        throw new BadRequestError("El id de la vena no puede ser vacio.");
+    }
+    try {
+        const detalles = await Venta.findOne({
+            where: { id_venta: idVenta },
+            attributes: ['fecha_venta'],
+            include: [
+            {
+            model: DetalleVenta,
+                attributes: ['cantidad', 'precio_venta'],
+                include: [
+                {
+                    model: Producto,
+                    attributes: [ 'nombre'] 
+                }
+                ]
+            },
+            {
+                model: Deudor,
+                attributes: ['dni_deudor', 'nombre', 'telefono'] 
+            }, 
+            {
+                model: Abono,
+                attributes: ['monto_abono']
+            }
+      ]
+    });
+    if(!detalles){
+        throw new NotFoundError("No se encontraron detalles de esa venta");
+    }
+    const total = calcularTotalVenta(detalles.detalle_venta);
+    const abonoTotal = calcularTotalAbonos(detalles.abonos);
+    const resultadoFinal = {
+        fecha: detalles.fecha_venta,
+        detallesVenta: detalles.detalle_venta,
+        deudor: detalles.deudor,
+        totalVenta : total,
+        abono: abonoTotal
+    }
+    
+    return resultadoFinal;
+        
+    } catch (error) {
+        throw error;
+        
+    }
+}
+
+function calcularTotalVenta(detalles){
+    let total = 0;
+    detalles.forEach((detalle) => {
+        total += (detalle.cantidad * detalle.precio_venta);
+    });
+    return total;
+};
+
+function calcularTotalAbonos(abonos){
+    let total = 0;
+    abonos.forEach((abono) => {
+        total += parseFloat(abono.monto_abono);
+    });
+    return total;
+}
+
+export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,  ventasFiadas, 
+    detallesDeUnaVentaFiada };
