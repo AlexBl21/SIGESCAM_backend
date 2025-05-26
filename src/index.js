@@ -16,7 +16,6 @@ import TipoNotificacion from "./models/TipoNotificacion.js";
 import PreferenciaNotificacion from "./models/PreferenciaNotificacion.js";
 import Sugerencia from "./models/Sugerencia.js";
 import NotificacionUsuario from "./models/NotificacionUsuario.js";
-import VentaLotes from "./models/VentaLotes.js";
 import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
 import usuarioRoutes from "./routes/UsuarioRoutes.js";
 import loginRoutes from "./routes/LoginRoutes.js";

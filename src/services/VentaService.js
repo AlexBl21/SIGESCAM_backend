@@ -1,9 +1,7 @@
 import Venta from "../models/Venta.js"
 //Aqui cuando se registre una venta modificar que no recorra todos los productos, sino solo los de la venta cuando ya se cree
 import Producto from "../models/Producto.js"
-import VentaLote from "../models/VentaLotes.js"
 import DetalleVenta from "../models/DetalleVenta.js";
-import Compra from "../models/Compra.js";
 import Deudor from "../models/Deudor.js";
 import { NotFoundError, InternalServerError, BadRequestError } from "../errors/Errores.js";
 import { where } from "sequelize";
@@ -74,39 +72,15 @@ async function agregarProductoAVentaTemporal({ nombreProducto, cantidad }) {
         throw new NotFoundError("Producto no encontrado o inactivo");
     }
 
-    const lotes = await Compra.findAll({
-        where: {
-            id_producto: producto.id_producto,
-            cantidad_disponible: { [Op.gt]: 0 }
-        },
-        order: [['fecha_compra', 'ASC']]
-    });
-
-    if (!lotes.length) {
+    if (producto.cantidad <= 0) {
         throw new BadRequestError("Este producto no cuenta con unidades disponibles");
     }
 
-    let cantidadRestante = cantidad;
-    let costoTotal = 0;
-    const detalleLotes = [];
-
-    for (const lote of lotes) {
-        if (cantidadRestante <= 0) break;
-
-        const disponible = lote.cantidad_disponible;
-        const aUsar = Math.min(disponible, cantidadRestante);
-
-        costoTotal += aUsar * lote.precio;
-        detalleLotes.push({
-            id_compra: lote.id_compra,
-            cantidad: aUsar,
-            precio_compra: lote.precio
-        });
-
-        cantidadRestante -= aUsar;
+    if (producto.cantidad <= 0) {
+        throw new BadRequestError("Este producto no cuenta con unidades disponibles");
     }
 
-    if (cantidadRestante > 0) {
+    if (cantidad > producto.cantidad) {
         throw new BadRequestError("Cantidad solicitada supera el stock disponible");
     }
 
@@ -116,8 +90,6 @@ async function agregarProductoAVentaTemporal({ nombreProducto, cantidad }) {
         cantidad,
         precioVenta: producto.precio_venta,
         total: producto.precio_venta * cantidad,
-        costoTotal,
-        detalleLotes
     };
 }
 
@@ -171,32 +143,15 @@ async function registrarVenta({ productos, dni_usuario, deudor, es_fiado, fecha 
         for (const producto of productos) {
             const detalle = await DetalleVenta.create({
                 cantidad: producto.cantidad,
-                precio_venta: producto.precioVenta,
-                costo_total: producto.costoTotal,
-                ganancia: (producto.precioVenta * producto.cantidad) - producto.costoTotal,
+                precio: producto.precioVenta,
                 id_venta: nuevaVenta.id_venta,
                 id_producto: producto.idProducto
             }, { transaction: t });
-
-
-            for (const lote of producto.detalleLotes) {
-                await VentaLote.create({
-                    id_detalle_venta: detalle.id_detalle_venta,
-                    id_compra: lote.id_compra,
-                    cantidad_usada: lote.cantidad,
-                    precio_compra: lote.precio_compra
-                }, { transaction: t });
-
-                const compra = await Compra.findByPk(lote.id_compra);
-                compra.cantidad_disponible -= lote.cantidad;
-                await compra.save({ transaction: t });
-            }
 
             const productoDB = await Producto.findByPk(producto.idProducto);
             productoDB.cantidad -= producto.cantidad;
             await productoDB.save({ transaction: t });
         }
-
 
         await verificarStock();
 
@@ -237,7 +192,7 @@ async function obtenerTop3ProductosMasVendidosDeLaSemana() {
 
 
     const diaSemana = hoy.getUTCDay();
-    const diffALunes = diaSemana === 0 ? 6 : diaSemana - 1; // si es domingo, retrocedemos 6 días, sino cuantos días desde lunes
+    const diffALunes = diaSemana === 0 ? 6 : diaSemana - 1;
     const inicioSemanaUTC = new Date(Date.UTC(
         hoy.getUTCFullYear(),
         hoy.getUTCMonth(),
