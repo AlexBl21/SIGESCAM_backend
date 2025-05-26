@@ -16,7 +16,6 @@ import TipoNotificacion from "./models/TipoNotificacion.js";
 import PreferenciaNotificacion from "./models/PreferenciaNotificacion.js";
 import Sugerencia from "./models/Sugerencia.js";
 import NotificacionUsuario from "./models/NotificacionUsuario.js";
-import VentaLotes from "./models/VentaLotes.js";
 import SugerenciaRoutes from "./routes/SugerenciaRoutes.js"
 import usuarioRoutes from "./routes/UsuarioRoutes.js";
 import loginRoutes from "./routes/LoginRoutes.js";
@@ -28,6 +27,7 @@ import cors from "cors";
 import notifiUsuarioRoutes from "./routes/NotificacionUsuarioRoutes.js";
 import preferenciaNotificacionRoutes from "./routes/PreferenciaNotiRoutes.js";
 import ventaRoutes from "./routes/VentaRoutes.js";
+import DeudorRoutes from "./routes/DeudorRoutes.js";
 
 dotenv.config({
   path: "../.env"
@@ -78,6 +78,7 @@ app.use("/recuperar-contrasena", recuperarContrasenaRoutes);
 app.use("/notificaciones", notifiUsuarioRoutes);
 app.use("/preferenciaNotificacion", preferenciaNotificacionRoutes);
 app.use("/ventas", ventaRoutes);
+app.use("/deudor", DeudorRoutes);
 //import UsuarioService from "./services/UsuarioService.js";
 //UsuarioService.listarGestoras();
 //VentaService.verificarStock();

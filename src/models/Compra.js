@@ -9,7 +9,6 @@ const Compra = db.define("compra", {
     cantidad_agregar: {type: DataTypes.INTEGER, allowNull: false}, 
     precio: { type: DataTypes.DECIMAL(10, 2), allowNull: false},
     fecha_compra: { type: DataTypes.DATE, allowNull: false},
-    cantidad_disponible: {type: DataTypes.INTEGER, allowNull: false}, 
 }, {
     timestamps: false, 
     freezeTableName: true
