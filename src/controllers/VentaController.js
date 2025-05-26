@@ -1,7 +1,7 @@
 import VentaService from '../services/VentaService.js';
 import { BadRequestError, InternalServerError } from '../errors/Errores.js';
 
-const agregarProductoAVentaTemporal = async (req, res, next) => {
+const agregarProductoAVentaTemporal = async (req, res) => {
     try {
         const { nombreProducto, cantidad } = req.body;
 
@@ -12,22 +12,26 @@ const agregarProductoAVentaTemporal = async (req, res, next) => {
         const producto = await VentaService.agregarProductoAVentaTemporal({ nombreProducto, cantidad });
         res.status(200).json(producto);
     } catch (error) {
-        next(error);
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
     }
 };
 
-const registrarVenta = async (req, res, next) => {
+const registrarVenta = async (req, res) => {
     try {
         const { productos, dni_usuario, deudor, es_fiado, fecha } = req.body;
 
         const venta = await VentaService.registrarVenta({ productos, dni_usuario, deudor, es_fiado, fecha });
         res.status(201).json(venta);
     } catch (error) {
-        next(error);
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
     }
 };
 
-export const obtenerVentasDelDia = async (req, res, next) => {
+export const obtenerVentasDelDia = async (req, res) => {
     try {
         const cantidadVentas = await VentaService.obtenerVentasDelDia();
         res.json({ ventasHoy: cantidadVentas });
@@ -35,6 +39,17 @@ export const obtenerVentasDelDia = async (req, res, next) => {
         next(error);
     }
 };
+
+async function top3ProductosSemana(req, res) {
+    try {
+        const top3 = await VentaService.obtenerTop3ProductosMasVendidosDeLaSemana();
+        res.json(top3);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error interno del servidor"
+        });
+    }
+}
 
 async function ventasFiadas(req, res) {
     try {
@@ -56,7 +71,8 @@ async function detallesDeUnaVentaFiada(req, res){
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
-    obtenerVentasDelDia, 
+    obtenerVentasDelDia,
+    top3ProductosSemana,
     ventasFiadas, 
     detallesDeUnaVentaFiada
 };

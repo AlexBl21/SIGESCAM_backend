@@ -30,7 +30,6 @@ import preferenciaNotificacionRoutes from "./routes/PreferenciaNotiRoutes.js";
 import ventaRoutes from "./routes/VentaRoutes.js";
 import DeudorRoutes from "./routes/DeudorRoutes.js";
 
-
 dotenv.config({
   path: "../.env"
 });
@@ -81,8 +80,6 @@ app.use("/notificaciones", notifiUsuarioRoutes);
 app.use("/preferenciaNotificacion", preferenciaNotificacionRoutes);
 app.use("/ventas", ventaRoutes);
 app.use("/deudor", DeudorRoutes);
-
-
 //import UsuarioService from "./services/UsuarioService.js";
 //UsuarioService.listarGestoras();
 //VentaService.verificarStock();

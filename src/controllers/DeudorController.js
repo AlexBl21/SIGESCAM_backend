@@ -1,5 +1,17 @@
 import DeudorService from "../services/DeudorService.js";
 
+async function obtenerDeudorPorDNI(req, res) {
+    const { dni } = req.params;
+
+    try {
+        const deudor = await DeudorService.buscarPorDNI(dni);
+        res.status(200).json(deudor);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error del servidor" });
+    }
+}
+
+
 async function listarDeudores(req, res) {
     try {
         const deudores = await DeudorService.listarDeudores();
@@ -9,4 +21,4 @@ async function listarDeudores(req, res) {
     }
 };
 
-export default {listarDeudores};
+export default { obtenerDeudorPorDNI, listarDeudores };
