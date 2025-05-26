@@ -10,7 +10,6 @@ import UsuarioService from "./UsuarioService.js";
 import NotificacionService from "./NotificacionService.js";
 import { Op, fn, col, literal } from 'sequelize';
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
-import Abono from "../models/Abono.js"; // Asegúrate de tener el modelo Abono
 import sequelize from "../db/db.js";
 import Abono from "../models/Abono.js";
 
@@ -289,7 +288,7 @@ async function ventasFiadas(dni_deudor) {
 
 //Obtener detalles de cierta venta, solo para fiadas
 async function detallesDeUnaVentaFiada(idVenta) {
-    if(!idVenta){
+    if (!idVenta) {
         throw new BadRequestError("El id de la vena no puede ser vacio.");
     }
     try {
@@ -297,48 +296,48 @@ async function detallesDeUnaVentaFiada(idVenta) {
             where: { id_venta: idVenta },
             attributes: ['fecha_venta'],
             include: [
-            {
-            model: DetalleVenta,
-                attributes: ['cantidad', 'precio_venta'],
-                include: [
                 {
-                    model: Producto,
-                    attributes: [ 'nombre'] 
+                    model: DetalleVenta,
+                    attributes: ['cantidad', 'precio_venta'],
+                    include: [
+                        {
+                            model: Producto,
+                            attributes: ['nombre']
+                        }
+                    ]
+                },
+                {
+                    model: Deudor,
+                    attributes: ['dni_deudor', 'nombre', 'telefono']
+                },
+                {
+                    model: Abono,
+                    attributes: ['monto_abono']
                 }
-                ]
-            },
-            {
-                model: Deudor,
-                attributes: ['dni_deudor', 'nombre', 'telefono'] 
-            }, 
-            {
-                model: Abono,
-                attributes: ['monto_abono']
-            }
-      ]
-    });
-    if(!detalles){
-        throw new NotFoundError("No se encontraron detalles de esa venta");
-    }
-    const total = calcularTotalVenta(detalles.detalle_venta);
-    const abonoTotal = calcularTotalAbonos(detalles.abonos);
-    const resultadoFinal = {
-        fecha: detalles.fecha_venta,
-        detallesVenta: detalles.detalle_venta,
-        deudor: detalles.deudor,
-        totalVenta : total,
-        abono: abonoTotal
-    }
-    
-    return resultadoFinal;
-        
+            ]
+        });
+        if (!detalles) {
+            throw new NotFoundError("No se encontraron detalles de esa venta");
+        }
+        const total = calcularTotalVenta(detalles.detalle_venta);
+        const abonoTotal = calcularTotalAbonos(detalles.abonos);
+        const resultadoFinal = {
+            fecha: detalles.fecha_venta,
+            detallesVenta: detalles.detalle_venta,
+            deudor: detalles.deudor,
+            totalVenta: total,
+            abono: abonoTotal
+        }
+
+        return resultadoFinal;
+
     } catch (error) {
         throw error;
-        
+
     }
 }
 
-function calcularTotalVenta(detalles){
+function calcularTotalVenta(detalles) {
     let total = 0;
     detalles.forEach((detalle) => {
         total += (detalle.cantidad * detalle.precio_venta);
@@ -346,7 +345,7 @@ function calcularTotalVenta(detalles){
     return total;
 };
 
-function calcularTotalAbonos(abonos){
+function calcularTotalAbonos(abonos) {
     let total = 0;
     abonos.forEach((abono) => {
         total += parseFloat(abono.monto_abono);
@@ -356,5 +355,7 @@ function calcularTotalAbonos(abonos){
 
 // Obtener historial estadístico de ventas con abono
 
-export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,  ventasFiadas, 
-    detallesDeUnaVentaFiada };
+export default {
+    registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana, ventasFiadas,
+    detallesDeUnaVentaFiada
+};
