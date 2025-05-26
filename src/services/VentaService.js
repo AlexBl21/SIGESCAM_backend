@@ -10,6 +10,7 @@ import UsuarioService from "./UsuarioService.js";
 import NotificacionService from "./NotificacionService.js";
 import { Op, fn, col, literal } from 'sequelize';
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
+import Abono from "../models/Abono.js"; // Asegúrate de tener el modelo Abono
 import sequelize from "../db/db.js";
 import Abono from "../models/Abono.js";
 
@@ -352,6 +353,8 @@ function calcularTotalAbonos(abonos){
     });
     return total;
 }
+
+// Obtener historial estadístico de ventas con abono
 
 export default { registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,  ventasFiadas, 
     detallesDeUnaVentaFiada };
