@@ -95,10 +95,14 @@ async function ventasFiadas(req, res) {
     }
 ;}
 
-// Historial de margenes de ganancia
+// Historial de margenes de ganancia por año recibido
 async function historialMargenesDeGanancia(req, res) {
     try {
-        const resultado = await VentaService.historialMargenesDeGanancia();
+        const { anio } = req.query;
+        if (!anio || isNaN(anio)) {
+            throw new BadRequestError("Debe proporcionar un año válido.");
+        }
+        const resultado = await VentaService.historialMargenesDeGanancia(Number(anio));
         res.status(200).json(resultado);
     } catch (error) {
         res.status(error.statusCode || 500).json({

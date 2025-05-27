@@ -505,31 +505,36 @@ async function margenDeGananciaDelMes(fecha) {
     };
 }
 
-// Historial de margenes
-async function historialMargenesDeGanancia() {
-    // Obtener el primer y último mes con ventas
+// Historial de margenes por año recibido
+async function historialMargenesDeGanancia(anio) {
+    if (!anio || isNaN(anio)) {
+        throw new BadRequestError("Debe proporcionar un año válido.");
+    }
+    // Buscar ventas del año especificado
     const primeraVenta = await Venta.findOne({
+        where: sequelize.where(sequelize.fn('YEAR', col('fecha_venta')), anio),
         order: [['fecha_venta', 'ASC']],
         attributes: ['fecha_venta'],
         raw: true
     });
     const ultimaVenta = await Venta.findOne({
+        where: sequelize.where(sequelize.fn('YEAR', col('fecha_venta')), anio),
         order: [['fecha_venta', 'DESC']],
         attributes: ['fecha_venta'],
         raw: true
     });
 
     if (!primeraVenta || !primeraVenta.fecha_venta) {
-        throw new NotFoundError("No hay ventas registradas para calcular historial de márgenes.");
+        throw new NotFoundError("No hay ventas registradas para calcular historial de márgenes en el año indicado.");
     }
 
     const inicio = new Date(primeraVenta.fecha_venta);
     const fin = new Date(ultimaVenta.fecha_venta);
 
-    // Generar lista de meses entre inicio y fin
+    // Generar lista de meses entre inicio y fin, solo para el año solicitado
     const meses = [];
-    let actual = new Date(Date.UTC(inicio.getUTCFullYear(), inicio.getUTCMonth(), 1));
-    const finMes = new Date(Date.UTC(fin.getUTCFullYear(), fin.getUTCMonth(), 1));
+    let actual = new Date(Date.UTC(anio, inicio.getUTCMonth(), 1));
+    const finMes = new Date(Date.UTC(anio, fin.getUTCMonth(), 1));
     while (actual <= finMes) {
         meses.push(new Date(actual));
         actual.setUTCMonth(actual.getUTCMonth() + 1);
