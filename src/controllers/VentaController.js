@@ -95,6 +95,18 @@ async function ventasFiadas(req, res) {
     }
 ;}
 
+// Historial de margenes de ganancia
+async function historialMargenesDeGanancia(req, res) {
+    try {
+        const resultado = await VentaService.historialMargenesDeGanancia();
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener el historial de márgenes de ganancia"
+        });
+    }
+}
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
@@ -103,6 +115,7 @@ export default {
     ventasFiadas, 
     detallesDeUnaVentaFiada,
     historialEstadisticoVentasConAbono,
-    margenDeGananciaDelMes
+    margenDeGananciaDelMes,
+    historialMargenesDeGanancia
 };
 
