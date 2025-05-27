@@ -51,14 +51,7 @@ async function top3ProductosSemana(req, res) {
     }
 }
 
-async function ventasFiadas(req, res) {
-    try {
-        const ventas = await VentaService.ventasFiadas(req.params.dni_deudor);
-        res.status(200).json(ventas);
-    } catch (error) {
-         res.status(error.statusCode || 500).json({ message: "Error al obtener ventas fiadas", error: error.message });
-    }
-;}
+
 
 async function detallesDeUnaVentaFiada(req, res){
     try {
@@ -68,27 +61,11 @@ async function detallesDeUnaVentaFiada(req, res){
         res.status(error.statusCode || 500).json({ message: "Error al obtener deatlle de la venta", error: error.message });
     }
 }
-
-// Obtener historial estadístico de ventas con abono
-async function historialEstadisticoVentasConAbono(req, res) {
-    try {
-        const resultado = await VentaService.obtenerHistorialEstadisticoVentasConAbono();
-        res.status(200).json(resultado);
-    } catch (error) {
-        // Si el error es una validación personalizada, devolver el mensaje específico
-        res.status(error.statusCode || 500).json({
-            message: error.message || "Error al obtener el historial estadístico de ventas con abono"
-        });
-    }
-}
-
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
     obtenerVentasDelDia,
     top3ProductosSemana,
-    ventasFiadas, 
-    detallesDeUnaVentaFiada,
-    historialEstadisticoVentasConAbono
+    detallesDeUnaVentaFiada
 };
 

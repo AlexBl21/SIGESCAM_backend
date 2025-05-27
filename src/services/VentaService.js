@@ -244,48 +244,6 @@ async function obtenerTop3ProductosMasVendidosDeLaSemana() {
 }
 
 
-//listar ventas fiadas (sin pagar) del deudor
-async function ventasFiadas(dni_deudor) {
-    try {
-        const ventasConDeuda = await Venta.findAll({
-            where: {
-                dni_deudor: dni_deudor,
-                es_fiado: true
-            },
-            include: [
-                {
-                    model: Abono,
-                    attributes: ['id_abono', 'monto_abono', 'fecha_abono']
-                }
-            ],
-            attributes: ['id_venta', 'total', 'es_fiado', 'fecha_venta']
-        });
-
-        if (!ventasConDeuda || ventasConDeuda.length === 0) {
-            throw new Error("No se encontraron deudas para el cliente");
-        }
-        // Procesar cada venta para calcular monto pendiente
-        const resultado = ventasConDeuda.map(venta => {
-            const totalVenta = parseFloat(venta.total);
-            const sumaAbonos = venta.abonos.reduce((acc, abono) => acc + parseFloat(abono.monto_abono), 0);
-            const montoPendiente = totalVenta - sumaAbonos;
-
-            return {
-                id_venta: venta.id_venta,
-                fecha_venta: venta.fecha_venta,
-                monto_pendiente: montoPendiente
-            };
-        });
-
-        return resultado;
-    } catch (error) {
-        throw {
-            message: "Error al obtener ventas fiadas",
-            error: error.message
-        };
-    }
-}
-
 //Obtener detalles de cierta venta, solo para fiadas
 async function detallesDeUnaVentaFiada(idVenta) {
     if (!idVenta) {
@@ -451,6 +409,6 @@ async function obtenerHistorialEstadisticoVentasConAbono() {
 }
 
 export default {
-    registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana, ventasFiadas,
+    registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,
     detallesDeUnaVentaFiada, obtenerHistorialEstadisticoVentasConAbono
 };
