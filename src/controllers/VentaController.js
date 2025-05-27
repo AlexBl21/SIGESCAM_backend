@@ -86,21 +86,12 @@ async function margenDeGananciaDelMes(req, res) {
     }
 }
 
-async function ventasFiadas(req, res) {
-    try {
-        const ventas = await VentaService.ventasFiadas(req.params.dni_deudor);
-        res.status(200).json(ventas);
-    } catch (error) {
-         res.status(error.statusCode || 500).json({ message: "Error al obtener ventas fiadas", error: error.message });
-    }
-;}
 
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
     obtenerVentasDelDia,
-    top3ProductosSemana,
-    ventasFiadas, 
+    top3ProductosSemana, 
     detallesDeUnaVentaFiada,
     historialEstadisticoVentasConAbono,
     margenDeGananciaDelMes

@@ -33,6 +33,7 @@ async function buscarPorNombreODNI(termino) {
             [Op.or]: [
                 { nombre: { [Op.like]: `%${termino}%` } },
                 { dni_deudor: { [Op.like]: `%${termino}%` } }
+
             ]
         }
     });
@@ -45,28 +46,28 @@ async function buscarPorNombreODNI(termino) {
 };
 
 async function obtenerVentasFiadas(dni) {
-    if (!dni){
+    if (!dni) {
         throw new BadRequestError("El dni está vacio")
     }
     try {
         const ventasFiadas = await Deudor.findOne({
-        where: {dni_deudor: dni},
-        attributes: ['dni_deudor', 'nombre', 'telefono'],
-        include: [
-            {
-                model: Venta,
-                where:{es_fiado: true },
-                attributes: ['id_venta', 'total', 'es_fiado', 'fecha_venta'],
-                include: [
+            where: { dni_deudor: dni },
+            attributes: ['dni_deudor', 'nombre', 'telefono'],
+            include: [
                 {
-                    model: Abono,
-                    attributes: ['id_abono', 'monto_abono', 'fecha_abono']
+                    model: Venta,
+                    where: { es_fiado: true },
+                    attributes: ['id_venta', 'total', 'es_fiado', 'fecha_venta'],
+                    include: [
+                        {
+                            model: Abono,
+                            attributes: ['id_abono', 'monto_abono', 'fecha_abono']
+                        }
+                    ]
                 }
-                ]
-            }
             ]
         });
-        if(!ventasFiadas){
+        if (!ventasFiadas) {
             throw new NotFoundError("No se encontraron ventas fiadas para este deudor")
         }
         // Procesar cada venta para calcular monto pendiente
@@ -84,7 +85,7 @@ async function obtenerVentasFiadas(dni) {
 
         const resultadoFinal = {
             dni_deudor: ventasFiadas.dni_deudor,
-            nombre: ventasFiadas.nombre, 
+            nombre: ventasFiadas.nombre,
             telefono: ventasFiadas.telefono,
             ventas: ventas
         }
@@ -92,7 +93,7 @@ async function obtenerVentasFiadas(dni) {
     } catch (error) {
         throw error;
     }
-    
+
 }
 
 async function abonoTotal(abonos) {
