@@ -256,7 +256,7 @@ async function detallesDeUnaVentaFiada(idVenta) {
             include: [
                 {
                     model: DetalleVenta,
-                    attributes: ['cantidad', 'precio_venta'],
+                    attributes: ['cantidad', 'precio'],
                     include: [
                         {
                             model: Producto,
@@ -298,7 +298,7 @@ async function detallesDeUnaVentaFiada(idVenta) {
 function calcularTotalVenta(detalles) {
     let total = 0;
     detalles.forEach((detalle) => {
-        total += (detalle.cantidad * detalle.precio_venta);
+        total += (detalle.cantidad * detalle.precio);
     });
     return total;
 };
@@ -410,6 +410,7 @@ async function obtenerHistorialEstadisticoVentasConAbono() {
         totalGanancia
     };
 }
+
 
 export default {
     registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,

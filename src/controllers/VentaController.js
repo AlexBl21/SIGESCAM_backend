@@ -51,8 +51,6 @@ async function top3ProductosSemana(req, res) {
     }
 }
 
-
-
 async function detallesDeUnaVentaFiada(req, res){
     try {
         const detalles = await VentaService.detallesDeUnaVentaFiada(req.params.id_venta);
@@ -60,7 +58,8 @@ async function detallesDeUnaVentaFiada(req, res){
     } catch (error) {
         res.status(error.statusCode || 500).json({ message: "Error al obtener deatlle de la venta", error: error.message });
     }
-}
+};
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
