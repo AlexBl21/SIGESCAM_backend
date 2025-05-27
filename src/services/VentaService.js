@@ -12,6 +12,7 @@ import { Op, fn, col, literal } from 'sequelize';
 import PreferenciaNotificacionService from "./PreferenciaNotificacionService.js";
 import sequelize from "../db/db.js";
 import Abono from "../models/Abono.js";
+import Compra from "../models/Compra.js";
 
 
 async function verificarStock() {
@@ -256,7 +257,7 @@ async function detallesDeUnaVentaFiada(idVenta) {
             include: [
                 {
                     model: DetalleVenta,
-                    attributes: ['cantidad', 'precio_venta'],
+                    attributes: ['cantidad', 'precio'],
                     include: [
                         {
                             model: Producto,
@@ -298,7 +299,7 @@ async function detallesDeUnaVentaFiada(idVenta) {
 function calcularTotalVenta(detalles) {
     let total = 0;
     detalles.forEach((detalle) => {
-        total += (detalle.cantidad * detalle.precio_venta);
+        total += (detalle.cantidad * detalle.precio);
     });
     return total;
 };
@@ -411,7 +412,58 @@ async function obtenerHistorialEstadisticoVentasConAbono() {
     };
 }
 
+// Margen de ganancia del mes
+
+async function margenDeGananciaDelMes(fecha) {
+    if (!fecha) {
+        throw new BadRequestError("Debe proporcionar una fecha.");
+    }
+    const dateObj = new Date(fecha);
+    if (isNaN(dateObj)) {
+        throw new BadRequestError("Fecha inválida.");
+    }
+    const year = dateObj.getUTCFullYear();
+    const month = dateObj.getUTCMonth();
+
+    // Rango de fechas del mes
+    const inicioMes = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+    const finMes = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+
+    // Entradas: ventas NO fiadas, pagadas, en el mes
+    const entradas = await Venta.sum('total', {
+        where: {
+            es_fiado: false,
+            fecha_venta: {
+                [Op.between]: [inicioMes, finMes]
+            }
+        }
+    }) || 0;
+
+    // Salidas: suma del costo total de compras realizadas en el mes (precio unitario * cantidad)
+    const salidasResult = await Compra.findAll({
+        where: {
+            fecha_compra: {
+                [Op.between]: [inicioMes, finMes]
+            }
+        },
+        attributes: [
+            [sequelize.literal('SUM(precio * cantidad_agregar)'), 'total_salidas']
+        ],
+        raw: true
+    });
+    const salidas = salidasResult[0]?.total_salidas ? parseFloat(salidasResult[0].total_salidas) : 0;
+
+    // Margen de negocio
+    const margenNegocio = entradas - salidas;
+
+    return {
+        entradas,
+        salidas,
+        margenNegocio
+    };
+}
+
 export default {
-    registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,
-    detallesDeUnaVentaFiada, obtenerHistorialEstadisticoVentasConAbono
+    registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana, ventasFiadas,
+    detallesDeUnaVentaFiada, obtenerHistorialEstadisticoVentasConAbono, margenDeGananciaDelMes
 };

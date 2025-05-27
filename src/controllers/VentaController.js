@@ -51,8 +51,6 @@ async function top3ProductosSemana(req, res) {
     }
 }
 
-
-
 async function detallesDeUnaVentaFiada(req, res){
     try {
         const detalles = await VentaService.detallesDeUnaVentaFiada(req.params.id_venta);
@@ -61,11 +59,41 @@ async function detallesDeUnaVentaFiada(req, res){
         res.status(error.statusCode || 500).json({ message: "Error al obtener deatlle de la venta", error: error.message });
     }
 }
+
+// Obtener historial estadístico de ventas con abono
+async function historialEstadisticoVentasConAbono(req, res) {
+    try {
+        const resultado = await VentaService.obtenerHistorialEstadisticoVentasConAbono();
+        res.status(200).json(resultado);
+    } catch (error) {
+        // Si el error es una validación personalizada, devolver el mensaje específico
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener el historial estadístico de ventas con abono"
+        });
+    }
+}
+
+// Margen de ganancia del mes
+async function margenDeGananciaDelMes(req, res) {
+    try {
+        const { fecha } = req.query;
+        const resultado = await VentaService.margenDeGananciaDelMes(fecha);
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al calcular el margen de ganancia del mes"
+        });
+    }
+}
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
     obtenerVentasDelDia,
     top3ProductosSemana,
-    detallesDeUnaVentaFiada
+    ventasFiadas, 
+    detallesDeUnaVentaFiada,
+    historialEstadisticoVentasConAbono,
+    margenDeGananciaDelMes
 };
 
