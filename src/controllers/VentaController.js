@@ -82,6 +82,19 @@ async function historialEstadisticoVentasConAbono(req, res) {
     }
 }
 
+// Margen de ganancia del mes
+async function margenDeGananciaDelMes(req, res) {
+    try {
+        const { fecha } = req.query;
+        const resultado = await VentaService.margenDeGananciaDelMes(fecha);
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al calcular el margen de ganancia del mes"
+        });
+    }
+}
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
@@ -89,6 +102,7 @@ export default {
     top3ProductosSemana,
     ventasFiadas, 
     detallesDeUnaVentaFiada,
-    historialEstadisticoVentasConAbono
+    historialEstadisticoVentasConAbono,
+    margenDeGananciaDelMes
 };
 
