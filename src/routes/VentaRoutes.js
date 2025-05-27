@@ -10,4 +10,5 @@ router.get("/top3-semana", VentaController.top3ProductosSemana);
 router.get("/ventas-fiadas/detalles/:id_venta", VentaController.detallesDeUnaVentaFiada);
 router.get("/historial-ventas", VentaController.historialEstadisticoVentasConAbono);
 router.get("/margen-ganancia-mes", VentaController.margenDeGananciaDelMes);
+router.get("/historial-margenes-ganancia", VentaController.historialMargenesDeGanancia);
 export default router;

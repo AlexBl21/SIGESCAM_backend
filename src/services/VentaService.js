@@ -1,3 +1,4 @@
+
 import Venta from "../models/Venta.js"
 //Aqui cuando se registre una venta modificar que no recorra todos los productos, sino solo los de la venta cuando ya se cree
 import Producto from "../models/Producto.js"
@@ -463,7 +464,102 @@ async function margenDeGananciaDelMes(fecha) {
     };
 }
 
+// Historial de margenes por año recibido
+async function historialMargenesDeGanancia(anio) {
+    if (!anio || isNaN(anio)) {
+        throw new BadRequestError("Debe proporcionar un año válido.");
+    }
+    // Buscar ventas del año especificado
+    const primeraVenta = await Venta.findOne({
+        where: sequelize.where(sequelize.fn('YEAR', col('fecha_venta')), anio),
+        order: [['fecha_venta', 'ASC']],
+        attributes: ['fecha_venta'],
+        raw: true
+    });
+    const ultimaVenta = await Venta.findOne({
+        where: sequelize.where(sequelize.fn('YEAR', col('fecha_venta')), anio),
+        order: [['fecha_venta', 'DESC']],
+        attributes: ['fecha_venta'],
+        raw: true
+    });
+
+    if (!primeraVenta || !primeraVenta.fecha_venta) {
+        throw new NotFoundError("No hay ventas registradas para calcular historial de márgenes en el año indicado.");
+    }
+
+    const inicio = new Date(primeraVenta.fecha_venta);
+    const fin = new Date(ultimaVenta.fecha_venta);
+
+    // Generar lista de meses entre inicio y fin, solo para el año solicitado
+    const meses = [];
+    let actual = new Date(Date.UTC(anio, inicio.getUTCMonth(), 1));
+    const finMes = new Date(Date.UTC(anio, fin.getUTCMonth(), 1));
+    while (actual <= finMes) {
+        meses.push(new Date(actual));
+        actual.setUTCMonth(actual.getUTCMonth() + 1);
+    }
+
+    const historial = [];
+    let sumaMargenes = 0;
+
+    for (const mes of meses) {
+        const year = mes.getUTCFullYear();
+        const month = mes.getUTCMonth();
+        const nombreMes = mes.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+
+        // Rango de fechas del mes
+        const inicioMes = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+        const finMes = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+
+        // Entradas: ventas NO fiadas, pagadas, en el mes
+        const entradas = await Venta.sum('total', {
+            where: {
+                es_fiado: false,
+                fecha_venta: {
+                    [Op.between]: [inicioMes, finMes]
+                }
+            }
+        }) || 0;
+
+        // Salidas: suma del costo total de compras realizadas en el mes (precio unitario * cantidad)
+        const salidasResult = await Compra.findAll({
+            where: {
+                fecha_compra: {
+                    [Op.between]: [inicioMes, finMes]
+                }
+            },
+            attributes: [
+                [sequelize.literal('SUM(precio * cantidad_agregar)'), 'total_salidas']
+            ],
+            raw: true
+        });
+        const salidas = salidasResult[0]?.total_salidas ? parseFloat(salidasResult[0].total_salidas) : 0;
+
+        const margenNegocio = entradas - salidas;
+        sumaMargenes += margenNegocio;
+
+        historial.push({
+            mes: nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1),
+            margenNegocio
+        });
+    }
+
+    const promedioMensual = historial.length > 0 ? (sumaMargenes / historial.length) : 0;
+
+    return {
+        historial,
+        promedioMensual
+    };
+}
+
 export default {
-    registrarVenta, verificarStock, agregarProductoAVentaTemporal, obtenerVentasDelDia, obtenerTop3ProductosMasVendidosDeLaSemana,
-    detallesDeUnaVentaFiada, obtenerHistorialEstadisticoVentasConAbono, margenDeGananciaDelMes
+    registrarVenta,
+    verificarStock, 
+    agregarProductoAVentaTemporal, 
+    obtenerVentasDelDia, 
+    obtenerTop3ProductosMasVendidosDeLaSemana, 
+    detallesDeUnaVentaFiada, 
+    obtenerHistorialEstadisticoVentasConAbono, 
+    margenDeGananciaDelMes, 
+    historialMargenesDeGanancia
 };

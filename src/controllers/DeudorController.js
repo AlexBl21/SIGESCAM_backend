@@ -25,9 +25,10 @@ async function ventasFiadas(req, res) {
         const ventas = await DeudorService.obtenerVentasFiadas(req.params.dni_deudor);
         res.status(200).json(ventas);
     } catch (error) {
-         res.status(error.statusCode || 500).json({ message: "Error al obtener ventas fiadas", error: error.message });
+        res.status(error.statusCode || 500).json({ message: "Error al obtener ventas fiadas", error: error.message });
     }
-;}
+    ;
+}
 
 async function buscarPorNombreODNI(req, res) {
     const { termino } = req.query;
@@ -43,6 +44,29 @@ async function buscarPorNombreODNI(req, res) {
     }
 }
 
-export default { obtenerDeudorPorDNI, listarDeudores, ventasFiadas, buscarPorNombreODNI };
+async function eliminarDeudorPorDNI(req, res) {
+    const { dni } = req.params;
+
+    try {
+        const deudor = await DeudorService.buscarPorDNI(dni);
+        if (!deudor) {
+            return res.status(404).json({ mensaje: "Deudor no encontrado" });
+        }
+
+        if (parseFloat(deudor.monto_pendiente) > 0) {
+            return res.status(400).json({ mensaje: "El deudor aún tiene deuda pendiente" });
+        }
+
+        await DeudorService.eliminarPorDNI(dni);
+        return res.status(200).json({ mensaje: "Deudor eliminado con éxito" });
+    } catch (error) {
+        console.error("Error al eliminar deudor:", error.message);
+        res.status(500).json({ mensaje: "Error al eliminar deudor", error: error.message });
+    }
+
+}
+
+
+export default { obtenerDeudorPorDNI, listarDeudores, ventasFiadas, buscarPorNombreODNI, eliminarDeudorPorDNI };
 
 

@@ -1,3 +1,4 @@
+
 import VentaService from '../services/VentaService.js';
 import { BadRequestError, InternalServerError } from '../errors/Errores.js';
 
@@ -86,14 +87,29 @@ async function margenDeGananciaDelMes(req, res) {
     }
 }
 
+// Historial de margenes de ganancia por año recibido
+async function historialMargenesDeGanancia(req, res) {
+    try {
+        const { anio } = req.query;
+        if (!anio || isNaN(anio)) {
+            throw new BadRequestError("Debe proporcionar un año válido.");
+        }
+        const resultado = await VentaService.historialMargenesDeGanancia(Number(anio));
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener el historial de márgenes de ganancia"
+        });
+    }
+}
 
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
     obtenerVentasDelDia,
-    top3ProductosSemana, 
+    top3ProductosSemana,
     detallesDeUnaVentaFiada,
     historialEstadisticoVentasConAbono,
-    margenDeGananciaDelMes
+    margenDeGananciaDelMes,
+    historialMargenesDeGanancia
 };
-
