@@ -25,5 +25,22 @@ async function listarDeudores() {
     }
 };
 
+async function buscarPorNombreODNI(termino) {
+    const deudores = await Deudor.findAll({
+        where: {
+            [Op.or]: [
+                { nombre: { [Op.like]: `%${termino}%` } },
+                { dni_deudor: { [Op.like]: `%${termino}%` } }
+            ]
+        }
+    });
 
-export default { listarDeudores, buscarPorDNI };
+    if (!deudores || deudores.length === 0) {
+        throw new NotFoundError("No se encontraron deudores");
+    }
+
+    return deudores;
+}
+
+
+export default { listarDeudores, buscarPorDNI, buscarPorNombreODNI };

@@ -11,7 +11,6 @@ async function obtenerDeudorPorDNI(req, res) {
     }
 }
 
-
 async function listarDeudores(req, res) {
     try {
         const deudores = await DeudorService.listarDeudores();
@@ -21,4 +20,19 @@ async function listarDeudores(req, res) {
     }
 };
 
-export default { obtenerDeudorPorDNI, listarDeudores };
+async function buscarPorNombreODNI(req, res) {
+    const { termino } = req.query;
+
+    try {
+        const resultados = await DeudorService.buscarPorNombreODNI(termino);
+        res.status(200).json(resultados);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            mensaje: "Error al buscar deudores",
+            error: error.message,
+        });
+    }
+}
+
+
+export default { obtenerDeudorPorDNI, listarDeudores, buscarPorNombreODNI };
