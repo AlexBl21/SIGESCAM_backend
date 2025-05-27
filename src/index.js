@@ -78,8 +78,7 @@ app.use("/recuperar-contrasena", recuperarContrasenaRoutes);
 app.use("/notificaciones", notifiUsuarioRoutes);
 app.use("/preferenciaNotificacion", preferenciaNotificacionRoutes);
 app.use("/ventas", ventaRoutes);
-//app.use("/deudor", DeudorRoutes);
-app.use("/api/deudores", DeudorRoutes);
+app.use("/deudores", DeudorRoutes);
 //import UsuarioService from "./services/UsuarioService.js";
 //UsuarioService.listarGestoras();
 //VentaService.verificarStock();
@@ -96,3 +95,13 @@ try {
 } catch (error) {
   console.error("Ocurrió un error al obtener la preferencia:", error.message);
 }*/
+/*
+import DeudorService from "./services/DeudorService.js";
+
+const d= await DeudorService.listarDeudores();
+if(d){
+  console.log(d);
+}else{
+  console.log("No hay deudores");
+}*/
+

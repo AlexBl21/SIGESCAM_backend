@@ -1,5 +1,5 @@
 import { Router } from "express";
-import DeudorController from "../controllers/DeudorController";
+import DeudorController from "../controllers/DeudorController.js";
 
 const router = Router();
 router.get('/', DeudorController.listarDeudores);

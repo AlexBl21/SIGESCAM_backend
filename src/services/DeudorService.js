@@ -34,7 +34,6 @@ async function listarDeudores() {
         if (!deudores || deudores.length === 0) {
             throw new NotFoundError("No se encontraron deudores");
         }
-
         const resultado = deudores
             .map(deudor => {
                 let deudaTotal = 0;
@@ -42,7 +41,7 @@ async function listarDeudores() {
                 deudor.venta.forEach(ventaa => {
                     const totalVenta = parseFloat(ventaa.total);
                     const sumaAbonos = abonoTotal(ventaa.abonos);
-                    // console.log(sumaAbonos);
+                   // console.log(sumaAbonos);
                     const montoPendiente = totalVenta - sumaAbonos;
                     deudaTotal += montoPendiente;
                 });
