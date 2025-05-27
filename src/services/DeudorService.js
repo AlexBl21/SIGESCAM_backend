@@ -12,16 +12,44 @@ async function buscarPorDNI(dni) {
 async function listarDeudores() {
     try {
         const deudores = await Deudor.findAll({
-            where: {
-                monto_pendiente: {
-                    [Op.gt]: 0
+            include: [
+                {
+                    model: Venta,
+                    where: { es_fiado: true },
+                    attributes: ['total'],
+                    include: [
+                        {
+                            model: Abono,
+                            attributes: ['monto_abono']
+                        }
+                    ]
                 }
-            }
+            ]
         });
-        if (!deudores) {
-            throw new NotFoundError("No se encontraron deudores")
+
+        if (!deudores || deudores.length === 0) {
+            throw new NotFoundError("No se encontraron deudores");
         }
-        return deudores;
+
+        const resultado = deudores
+            .map(deudor => {
+                let deudaTotal = 0;
+
+                deudor.venta.forEach(ventaa => {
+                    const totalVenta = parseFloat(ventaa.total);
+                    const sumaAbonos = abonoTotal(ventaa.abonos);
+                   // console.log(sumaAbonos);
+                    const montoPendiente = totalVenta - sumaAbonos;
+                    deudaTotal += montoPendiente;
+                });
+
+                return {
+                    dni_deudor: deudor.dni_deudor,
+                    nombre: deudor.nombre,
+                    deuda_total: deudaTotal.toFixed(2)
+                };
+            })
+        return resultado;
     } catch (error) {
         throw error;
     }
@@ -95,10 +123,10 @@ async function obtenerVentasFiadas(dni) {
     
 }
 
-async function abonoTotal(abonos) {
+ function abonoTotal(abonos) {
     let total = 0;
     abonos.forEach((abono) => {
-        total += parseFloat(abonos.monto_abono);
+        total += parseFloat(abono.monto_abono);
     });
     return total;
 }
