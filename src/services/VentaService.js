@@ -353,14 +353,13 @@ function calcularTotalAbonos(abonos) {
     return total;
 }
 
-// Obtener historial estadístico de ventas con abono
+// Obtener historial estadístico de ventas con abono, agrupando y calculando ganancia por producto
 async function obtenerHistorialEstadisticoVentasConAbono() {
     // Traer todos los detalles de venta junto con la venta, producto y abonos
     const detalles = await DetalleVenta.findAll({
         include: [
             {
                 model: Venta,
-                as: 'ventum', // Si la relación se llama 'ventum'
                 attributes: ['es_fiado', 'id_venta'],
                 include: [
                     {
@@ -384,7 +383,7 @@ async function obtenerHistorialEstadisticoVentasConAbono() {
         throw new NotFoundError("No se encontraron detalles de ventas con abono.");
     }
 
-    // Agrupar por producto y precio
+    // Agrupar por producto y precio de compra/venta
     const agrupados = {};
 
     for (const detalle of detalles) {
@@ -394,59 +393,63 @@ async function obtenerHistorialEstadisticoVentasConAbono() {
         if (typeof detalle.id_producto === 'undefined' || typeof detalle.precio === 'undefined') continue;
         if (typeof detalle.cantidad !== 'number' || detalle.cantidad < 0) continue;
 
-        const key = `${detalle.id_producto}_${detalle.precio}`;
+        // Obtener el precio de compra más reciente del producto mediante consulta
+        let precioCompra = 0;
+        try {
+            const compraProducto = await sequelize.models.CompraProducto.findOne({
+                where: { id_producto: detalle.id_producto },
+                order: [['fecha_compra', 'DESC']]
+            });
+            if (compraProducto) {
+                precioCompra = parseFloat(compraProducto.precio_compra) || 0;
+            }
+        } catch (e) {
+            precioCompra = 0;
+        }
+
+        const key = `${detalle.id_producto}_${detalle.precio}_${precioCompra}`;
         if (!agrupados[key]) {
             agrupados[key] = {
                 nombre: detalle.producto.nombre,
                 cantidad: 0,
                 precioVenta: detalle.precio,
-                estado: detalle.ventum.es_fiado ? 'Pendiente' : 'Pagado',
-                dineroPagado: 0,
-                abono: 0
+                precioCompra: precioCompra,
+                es_fiado: detalle.ventum.es_fiado,
+                abonos: [],
+                ganancia: 0
             };
         }
         agrupados[key].cantidad += detalle.cantidad;
 
-        // Sumar abonos solo de este producto, precio y venta
-        if (detalle.ventum.es_fiado) {
-            // Como Abono no tiene id_producto ni precio, sumamos todos los abonos de la venta
-            if (
-                Array.isArray(detalle.ventum.abonos) &&
-                detalle.ventum.abonos.length > 0
-            ) {
-                const abonosFiltrados = detalle.ventum.abonos.filter(
-                    ab =>
-                        ab &&
-                        typeof ab.monto_abono !== 'undefined'
-                );
-                agrupados[key].abono += abonosFiltrados.reduce(
-                    (sum, ab) => sum + parseFloat(ab.monto_abono || 0),
-                    0
-                );
-            }
+        // Guardar abonos si es fiado
+        if (detalle.ventum.es_fiado && Array.isArray(detalle.ventum.abonos)) {
+            agrupados[key].abonos = agrupados[key].abonos.concat(detalle.ventum.abonos.map(a => parseFloat(a.monto_abono || 0)));
         }
     }
 
-    // Ahora calcular dineroPagado correctamente multiplicando cantidad total * precioVenta solo para los pagados
-    for (const key in agrupados) {
-        if (agrupados[key].estado === 'Pagado') {
-            agrupados[key].dineroPagado = agrupados[key].cantidad * parseFloat(agrupados[key].precioVenta);
+    // Calcular ganancia por producto
+    let totalGanancia = 0;
+    const productos = Object.values(agrupados).map(p => {
+        let ganancia = 0;
+        if (p.es_fiado) {
+            // Si es fiado, la ganancia se calcula con la suma de abonos en vez del precio de venta
+            const totalAbonos = p.abonos.reduce((sum, ab) => sum + ab, 0);
+            ganancia = (totalAbonos - (p.precioCompra * p.cantidad));
+        } else {
+            ganancia = ((p.precioVenta - p.precioCompra) * p.cantidad);
         }
-    }
-
-    const productos = Object.values(agrupados);
-
-    // Calcular totales
-    const totalDineroPagado = productos.reduce((sum, p) => sum + (p.dineroPagado || 0), 0);
-    const totalAbonos = productos.reduce((sum, p) => sum + (p.abono || 0), 0);
+        totalGanancia += ganancia;
+        return {
+            nombre: p.nombre,
+            cantidad: p.cantidad,
+            precio: p.precioVenta,
+            ganancia
+        };
+    });
 
     return {
         productos,
-        total: {
-            dineroPagado: totalDineroPagado,
-            abono: totalAbonos,
-            general: totalDineroPagado + totalAbonos
-        }
+        totalGanancia
     };
 }
 

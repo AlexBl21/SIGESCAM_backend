@@ -63,12 +63,11 @@ export async function registrar(dni_usuario, nombre_producto, precio_compra, pre
             }
 
             // Actualizar el precio de compra y venta al último agregado
-            await producto.update({ precio_compra, precio_venta }, { transaction });
+            await producto.update({ precio_venta }, { transaction });
         } else {
             // Si el producto no existe, registrarlo utilizando el método registrar de ProductoService
             producto = await registrarProducto(
                 nombre_producto,
-                precio_compra,
                 precio_venta,
                 cantidad_agregar,
                 nombre_categoria
