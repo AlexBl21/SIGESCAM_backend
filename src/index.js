@@ -79,6 +79,7 @@ app.use("/notificaciones", notifiUsuarioRoutes);
 app.use("/preferenciaNotificacion", preferenciaNotificacionRoutes);
 app.use("/ventas", ventaRoutes);
 app.use("/deudor", DeudorRoutes);
+app.use("/api/deudores", DeudorRoutes);
 //import UsuarioService from "./services/UsuarioService.js";
 //UsuarioService.listarGestoras();
 //VentaService.verificarStock();
