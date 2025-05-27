@@ -9,6 +9,10 @@ async function buscarPorDNI(dni) {
     return deudor || null;
 }
 
+async function eliminarPorDNI(dni) {
+    await Deudor.destroy({ where: { dni_deudor: dni } });
+}
+
 async function listarDeudores() {
     try {
         const deudores = await Deudor.findAll({
@@ -30,7 +34,6 @@ async function listarDeudores() {
         if (!deudores || deudores.length === 0) {
             throw new NotFoundError("No se encontraron deudores");
         }
-
         const resultado = deudores
             .map(deudor => {
                 let deudaTotal = 0;
@@ -72,29 +75,30 @@ async function buscarPorNombreODNI(termino) {
     return deudores;
 };
 
+
 async function obtenerVentasFiadas(dni) {
-    if (!dni){
+    if (!dni) {
         throw new BadRequestError("El dni está vacio")
     }
     try {
         const ventasFiadas = await Deudor.findOne({
-        where: {dni_deudor: dni},
-        attributes: ['dni_deudor', 'nombre', 'telefono'],
-        include: [
-            {
-                model: Venta,
-                where:{es_fiado: true },
-                attributes: ['id_venta', 'total', 'es_fiado', 'fecha_venta'],
-                include: [
+            where: { dni_deudor: dni },
+            attributes: ['dni_deudor', 'nombre', 'telefono'],
+            include: [
                 {
-                    model: Abono,
-                    attributes: ['id_abono', 'monto_abono', 'fecha_abono']
+                    model: Venta,
+                    where: { es_fiado: true },
+                    attributes: ['id_venta', 'total', 'es_fiado', 'fecha_venta'],
+                    include: [
+                        {
+                            model: Abono,
+                            attributes: ['id_abono', 'monto_abono', 'fecha_abono']
+                        }
+                    ]
                 }
-                ]
-            }
             ]
         });
-        if(!ventasFiadas){
+        if (!ventasFiadas) {
             throw new NotFoundError("No se encontraron ventas fiadas para este deudor")
         }
         // Procesar cada venta para calcular monto pendiente
@@ -112,7 +116,7 @@ async function obtenerVentasFiadas(dni) {
 
         const resultadoFinal = {
             dni_deudor: ventasFiadas.dni_deudor,
-            nombre: ventasFiadas.nombre, 
+            nombre: ventasFiadas.nombre,
             telefono: ventasFiadas.telefono,
             ventas: ventas
         }
@@ -120,10 +124,10 @@ async function obtenerVentasFiadas(dni) {
     } catch (error) {
         throw error;
     }
-    
+
 }
 
- function abonoTotal(abonos) {
+function abonoTotal(abonos) {
     let total = 0;
     abonos.forEach((abono) => {
         total += parseFloat(abono.monto_abono);
@@ -131,4 +135,4 @@ async function obtenerVentasFiadas(dni) {
     return total;
 }
 
-export default { listarDeudores, buscarPorDNI, buscarPorNombreODNI, obtenerVentasFiadas };
+export default { listarDeudores, eliminarPorDNI, buscarPorDNI, buscarPorNombreODNI, obtenerVentasFiadas };

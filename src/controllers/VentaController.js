@@ -1,3 +1,4 @@
+
 import VentaService from '../services/VentaService.js';
 import { BadRequestError, InternalServerError } from '../errors/Errores.js';
 
@@ -58,13 +59,57 @@ async function detallesDeUnaVentaFiada(req, res){
     } catch (error) {
         res.status(error.statusCode || 500).json({ message: "Error al obtener deatlle de la venta", error: error.message });
     }
-};
+}
+
+// Obtener historial estadístico de ventas con abono
+async function historialEstadisticoVentasConAbono(req, res) {
+    try {
+        const resultado = await VentaService.obtenerHistorialEstadisticoVentasConAbono();
+        res.status(200).json(resultado);
+    } catch (error) {
+        // Si el error es una validación personalizada, devolver el mensaje específico
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener el historial estadístico de ventas con abono"
+        });
+    }
+}
+
+// Margen de ganancia del mes
+async function margenDeGananciaDelMes(req, res) {
+    try {
+        const { fecha } = req.query;
+        const resultado = await VentaService.margenDeGananciaDelMes(fecha);
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al calcular el margen de ganancia del mes"
+        });
+    }
+}
+
+// Historial de margenes de ganancia por año recibido
+async function historialMargenesDeGanancia(req, res) {
+    try {
+        const { anio } = req.query;
+        if (!anio || isNaN(anio)) {
+            throw new BadRequestError("Debe proporcionar un año válido.");
+        }
+        const resultado = await VentaService.historialMargenesDeGanancia(Number(anio));
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener el historial de márgenes de ganancia"
+        });
+    }
+}
 
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
     obtenerVentasDelDia,
     top3ProductosSemana,
-    detallesDeUnaVentaFiada
+    detallesDeUnaVentaFiada,
+    historialEstadisticoVentasConAbono,
+    margenDeGananciaDelMes,
+    historialMargenesDeGanancia
 };
-
