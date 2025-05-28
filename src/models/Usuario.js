@@ -8,7 +8,8 @@ const Usuario = db.define("usuario", {
     email: { type: DataTypes.STRING(100), allowNull: false},
     contrasena: {type: DataTypes.STRING(250)}, 
     telefono: {type: DataTypes.STRING(20)},
-    estado: {type: DataTypes.BOOLEAN, defaultValue: true}
+    estado: {type: DataTypes.BOOLEAN, defaultValue: true},
+    url_imagen: {type: DataTypes.STRING(500)}
 }, {
     timestamps: false, 
     freezeTableName: true

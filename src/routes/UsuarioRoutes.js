@@ -1,6 +1,6 @@
 import usuarioController from "../controllers/UsuarioController.js";
 import { Router } from "express";
-import { editarCorreo } from "../controllers/UsuarioController.js";
+import { editarCorreo, subirImagenPerfil, upload } from "../controllers/UsuarioController.js";
 
 const router = Router();
 
@@ -14,4 +14,5 @@ router.put("/email/:dni", editarCorreo);
 router.post("/crear-contrasena/:token", usuarioController.crearContrasena);
 //Validar email
 router.post("/validar-email", usuarioController.validarEmail);
+router.post("/:dni/foto", upload.single("imagen"), subirImagenPerfil);
 export default router;

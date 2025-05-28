@@ -3,6 +3,12 @@ import usuarioService from "../services/UsuarioService.js";
 import { actualizarCorreoElectronico } from "../services/UsuarioService.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import cloudinary from "../services/CloudinaryService.js";
+import multer from "multer";
+
+// Configuración de multer para recibir archivos
+const storage = multer.memoryStorage();
+export const upload = multer({ storage });
 
 async function registrar(req, res) {
     try {
@@ -134,6 +140,36 @@ async function validarEmail(req, res) {
         res.status(error.statusCode || 500).json({
             message: error.message || "Error interno del servidor"
         });
+    }
+}
+
+// Subir imagen de perfil
+export async function subirImagenPerfil(req, res) {
+    try {
+        const { dni } = req.params;
+        if (!req.file) {
+            return res.status(400).json({ message: "No se envió ninguna imagen" });
+        }
+        // Subir a Cloudinary
+        const resultado = await cloudinary.uploader.upload_stream({
+            folder: "userImages",
+            upload_preset: "perfil_usuario"
+        }, async (error, result) => {
+            if (error) {
+                return res.status(500).json({ message: "Error al subir la imagen a Cloudinary", error });
+            }
+            // Actualizar la url en la base de datos
+            const usuarioActualizado = await usuarioService.actualizarImagenPerfil(dni, result.secure_url);
+            return res.status(200).json({
+                message: "Imagen de perfil actualizada",
+                url_imagen: result.secure_url,
+                usuario: usuarioActualizado
+            });
+        });
+        // Escribir el buffer de la imagen
+        resultado.end(req.file.buffer);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
 

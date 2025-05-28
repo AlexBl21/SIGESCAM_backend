@@ -317,5 +317,16 @@ async function crearPreferencia(dni, tipo) {
     }
 };
 
-export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras, validarCorreoExistente, crearPreferencia  };
+// Actualizar la URL de la imagen de perfil
+async function actualizarImagenPerfil(dni, url_imagen) {
+    const usuario = await usuarioEntidad.findByPk(dni);
+    if (!usuario) {
+        throw new NotFoundError("El usuario no existe");
+    }
+    usuario.url_imagen = url_imagen;
+    await usuario.save();
+    return usuario;
+}
+
+export default { registrar, listar, editar, cambioDeEstado, buscarPorId, actualizarContraseña, listarGestoras, listarAdministradoras, validarCorreoExistente, crearPreferencia, actualizarImagenPerfil };
 
