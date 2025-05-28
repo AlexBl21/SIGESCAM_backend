@@ -553,17 +553,42 @@ async function historialMargenesDeGanancia(anio) {
 }
 
 async function obtenerHistorialVentas() {
-
     try {
         const ventas = await Venta.findAll({
             attributes: ['id_venta', 'fecha_venta', 'total', 'es_fiado'],
-
+            include: [
+                {
+                    model: Abono,
+                    attributes: ['monto_abono']
+                }
+            ],
             order: [['fecha_venta', 'DESC']]
         });
-        if (!ventas || ventas.lengFth === 0) {
+        if (!ventas || ventas.length === 0) {
             throw new NotFoundError("No se hay ventas registradas.");
         }
-        return calcularTotales(ventas);
+
+        const ventasConAbonos = ventas.map(venta => {
+            const abonos = venta.abonos || [];
+            const totalAbonos = abonos.reduce((sum, abono) => sum + parseFloat(abono.monto_abono || 0), 0);
+            return {
+                ...venta.toJSON(),
+                es_fiado: venta.es_fiado,
+                totalAbonos
+            };
+        });
+
+        const totalGeneral = ventasConAbonos.reduce((sum, v) => {
+            if (v.es_fiado) {
+                return sum + parseFloat(v.totalAbonos || 0);
+            } else {
+                return sum + parseFloat(v.total || 0);
+            }
+        }, 0);
+        return {
+            totalGeneral,
+            ventas: ventasConAbonos
+        };
     } catch (error) {
         throw new InternalServerError("Error al obtener el historial de ventas.");
     }
@@ -576,20 +601,48 @@ async function filtrarVentasPorFecha(fechaInicio, fechaFin) {
 
     fechaInicioObj.setMinutes(fechaInicioObj.getMinutes() - fechaInicioObj.getTimezoneOffset());
     fechaFinObj.setMinutes(fechaFinObj.getMinutes() - fechaFinObj.getTimezoneOffset());
+    try {
+        const ventas = await Venta.findAll({
+            where: {
+                fecha_venta: {
+                    [Op.between]: [fechaInicioObj, fechaFinObj]
+                }
+            }, include: [
+                {
+                    model: Abono,
+                    attributes: ['monto_abono']
+                }
+            ],
+            order: [['fecha_venta', 'DESC']]
+        });
+        if (!ventas || ventas.length === 0) {
+            throw new NotFoundError("No se hay ventas registradas.");
+        }
 
-    const ventas = await Venta.findAll({
-        where: {
-            fecha_venta: {
-                [Op.between]: [fechaInicioObj, fechaFinObj]
+        const ventasConAbonos = ventas.map(venta => {
+            const abonos = venta.abonos || [];
+            const totalAbonos = abonos.reduce((sum, abono) => sum + parseFloat(abono.monto_abono || 0), 0);
+            return {
+                ...venta.toJSON(),
+                es_fiado: venta.es_fiado,
+                totalAbonos
+            };
+        });
+
+        const totalGeneral = ventasConAbonos.reduce((sum, v) => {
+            if (v.es_fiado) {
+                return sum + parseFloat(v.totalAbonos || 0);
+            } else {
+                return sum + parseFloat(v.total || 0);
             }
-        },
-        order: [['fecha_venta', 'DESC']]
-    });
-
-    if (!ventas || ventas.length === 0) {
-        throw new NotFoundError("No se encontraron ventas en el rango de fechas especificado.");
+        }, 0);
+        return {
+            totalGeneral,
+            ventas: ventasConAbonos
+        };
+    } catch (error) {
+        throw new InternalServerError("Error al obtener el historial de ventas.");
     }
-    return calcularTotales(ventas);
 }
 
 async function obtenerDetalleVentas(idVenta) {
