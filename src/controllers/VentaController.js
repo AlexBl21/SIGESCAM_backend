@@ -1,4 +1,3 @@
-
 import VentaService from '../services/VentaService.js';
 import { BadRequestError, InternalServerError } from '../errors/Errores.js';
 

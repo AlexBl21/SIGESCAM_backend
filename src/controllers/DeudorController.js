@@ -1,4 +1,5 @@
 import DeudorService from "../services/DeudorService.js";
+import pool from "../db/db.js";
 
 async function obtenerDeudorPorDNI(req, res) {
     const { dni } = req.params;
@@ -66,7 +67,56 @@ async function eliminarDeudorPorDNI(req, res) {
 
 }
 
+const registrarAbono = async (req, res) => {
+    const { id_venta } = req.params;
+    const { monto_abono, fecha_abono } = req.body;
 
-export default { obtenerDeudorPorDNI, listarDeudores, ventasFiadas, buscarPorNombreODNI, eliminarDeudorPorDNI };
+    try {
+        const [rows] = await pool.query(
+            `SELECT v.id_venta, v.total, v.dni_deudor, d.monto_pendiente
+             FROM venta v
+             JOIN deudor d ON v.dni_deudor = d.dni_deudor
+             WHERE v.id_venta = ? AND v.es_fiado = TRUE`,
+            [id_venta]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ mensaje: "Venta fiada no encontrada" });
+        }
+
+        const venta = rows[0];
+
+        if (isNaN(monto_abono) || monto_abono <= 0) {
+            return res.status(400).json({ mensaje: "El monto del abono no es válido" });
+        }
+
+        const nuevaDeuda = venta.monto_pendiente - monto_abono;
+
+        if (nuevaDeuda < 0) {
+            return res.status(400).json({ mensaje: "El abono excede la deuda pendiente" });
+        }
+
+        await pool.query(
+            "INSERT INTO abono (monto_abono, fecha_abono, id_venta) VALUES (?, ?, ?)",
+            [monto_abono, fecha_abono, id_venta]
+        );
+
+        await pool.query(
+            "UPDATE deudor SET monto_pendiente = ?, pagado = ? WHERE dni_deudor = ?",
+            [nuevaDeuda, nuevaDeuda === 0, venta.dni_deudor]
+        );
+
+        res.status(200).json({
+            mensaje: "Abono registrado correctamente",
+            nuevaDeuda
+        });
+
+    } catch (error) {
+        console.error("Error al registrar abono:", error);
+        res.status(500).json({ mensaje: "Error interno del servidor" });
+    }
+};
+
+export default { obtenerDeudorPorDNI, listarDeudores, ventasFiadas, buscarPorNombreODNI, eliminarDeudorPorDNI, registrarAbono };
 
 
