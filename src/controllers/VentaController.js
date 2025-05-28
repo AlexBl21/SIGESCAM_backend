@@ -117,16 +117,34 @@ async function mostrarHistorialVentas(req, res) {
 async function mostrarVentasPorFecha(req, res) {
     try {
         const { fechaInicio, fechaFin } = req.query;
+
         if (!fechaInicio || !fechaFin) {
-            throw new BadRequestError("Debe proporcionar fechas válidas.");
+            return res.status(400).json({ message: "Debe proporcionar ambas fechas" });
         }
-        const ventas = await VentaService.filtrarVentasPorFecha(fechaInicio, fechaFin);
-        res.status(200).json(ventas);
+
+        const fechaInicioObj = new Date(fechaInicio + ' 00:00:00');
+        const fechaFinObj = new Date(fechaFin + ' 23:59:59');
+
+        if (fechaInicioObj > fechaFinObj) {
+            return res.status(400).json({ message: "La fecha de inicio no puede ser mayor a la fecha de fin" });
+        }
+
+        const resultado = await VentaService.filtrarVentasPorFecha(fechaInicio, fechaFin);
+        if (resultado.ventas.length === 0) {
+            return res.status(200).json({
+                message: "No hay registros de ventas.",
+                totalGeneral: 0,
+                ventas: []
+            });
+        }
+        return res.status(200).json(resultado);
     } catch (error) {
         res.status(error.statusCode || 500).json({
             message: error.message || "Error al obtener las ventas por fecha"
         });
     }
+
+
 }
 
 async function mostrarDetallesVenta(req, res) {

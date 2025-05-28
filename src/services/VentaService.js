@@ -563,7 +563,7 @@ async function obtenerHistorialVentas() {
         if (!ventas || ventas.lengFth === 0) {
             throw new NotFoundError("No se hay ventas registradas.");
         }
-        return ventas;
+        return calcularTotales(ventas);
     } catch (error) {
         throw new InternalServerError("Error al obtener el historial de ventas.");
     }
@@ -589,7 +589,7 @@ async function filtrarVentasPorFecha(fechaInicio, fechaFin) {
     if (!ventas || ventas.length === 0) {
         throw new NotFoundError("No se encontraron ventas en el rango de fechas especificado.");
     }
-    return ventas;
+    return calcularTotales(ventas);
 }
 
 async function obtenerDetalleVentas(idVenta) {
@@ -615,8 +615,24 @@ async function obtenerDetalleVentas(idVenta) {
     if (!venta) {
         throw new NotFoundError("Venta no encontrada.");
     }
-    return venta;
+    return calcularTotales(venta);
 
+}
+
+function calcularTotales(ventas) {
+    let totalGeneral = 0;
+    const ventasArray = Array.isArray(ventas) ? ventas : [ventas];
+    const ventasConTotales = ventasArray.map(venta => {
+        totalGeneral += Number(venta.total);
+        return {
+            ...venta.toJSON()
+        };
+    });
+
+    return {
+        totalGeneral,
+        ventas: ventasConTotales
+    };
 }
 
 export default {
