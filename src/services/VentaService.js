@@ -279,15 +279,22 @@ async function detallesDeUnaVentaFiada(idVenta) {
         if (!detalles) {
             throw new NotFoundError("No se encontraron detalles de esa venta");
         }
+        const detallesFormateados = detalles.detalle_venta.map(det => ({
+            nombre_producto: det.producto?.nombre ?? 'Nombre no disponible',
+            cantidad: det.cantidad,
+            precio_unitario: det.precio,
+            subtotal: det.cantidad * det.precio
+        }));
         const total = calcularTotalVenta(detalles.detalle_venta);
         const abonoTotal = calcularTotalAbonos(detalles.abonos);
         const resultadoFinal = {
             fecha: detalles.fecha_venta,
-            detallesVenta: detalles.detalle_venta,
+            detallesVenta: detallesFormateados, // ya formateado con el nombre del producto
             deudor: detalles.deudor,
             totalVenta: total,
             abono: abonoTotal
-        }
+        };
+
 
         return resultadoFinal;
 
@@ -673,12 +680,33 @@ async function obtenerDetalleVentas(idVenta) {
 }
 
 function calcularTotales(ventas) {
-    let totalGeneral = 0;
     const ventasArray = Array.isArray(ventas) ? ventas : [ventas];
+    let totalGeneral = 0;
+
     const ventasConTotales = ventasArray.map(venta => {
-        totalGeneral += Number(venta.total);
+        const detalles = venta.detalle_ventas.map(detalle => {
+            const producto = detalle.Producto;
+            const precioUnitario = Number(producto?.precio_venta) || 0;
+            const cantidad = Number(detalle.cantidad);
+            const subtotal = cantidad * precioUnitario;
+
+            return {
+                id_producto: producto?.id_producto,
+                nombre_producto: producto?.nombre || "Nombre no disponible",
+                precio_unitario: precioUnitario,
+                cantidad,
+                subtotal
+            };
+        });
+
+        const totalVenta = detalles.reduce((acc, d) => acc + d.subtotal, 0);
+        totalGeneral += totalVenta;
+
         return {
-            ...venta.toJSON()
+            id_venta: venta.id_venta,
+            fecha: venta.fecha,
+            productos: detalles,
+            total: totalVenta
         };
     });
 
@@ -687,6 +715,7 @@ function calcularTotales(ventas) {
         ventas: ventasConTotales
     };
 }
+
 
 export default {
     registrarVenta,
