@@ -52,7 +52,7 @@ async function top3ProductosSemana(req, res) {
     }
 }
 
-async function detallesDeUnaVentaFiada(req, res){
+async function detallesDeUnaVentaFiada(req, res) {
     try {
         const detalles = await VentaService.detallesDeUnaVentaFiada(req.params.id_venta);
         res.status(200).json(detalles);
@@ -103,6 +103,43 @@ async function historialMargenesDeGanancia(req, res) {
     }
 }
 
+async function mostrarHistorialVentas(req, res) {
+    try {
+        const historial = await VentaService.obtenerHistorialVentas();
+        res.status(200).json(historial);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener el historial de ventas"
+        });
+    }
+}
+
+async function mostrarVentasPorFecha(req, res) {
+    try {
+        const { fechaInicio, fechaFin } = req.query;
+        if (!fechaInicio || !fechaFin) {
+            throw new BadRequestError("Debe proporcionar fechas válidas.");
+        }
+        const ventas = await VentaService.filtrarVentasPorFecha(fechaInicio, fechaFin);
+        res.status(200).json(ventas);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener las ventas por fecha"
+        });
+    }
+}
+
+async function mostrarDetallesVenta(req, res) {
+    try {
+        const detalles = await VentaService.obtenerDetalleVentas(req.params.id_venta);
+        res.status(200).json(detalles);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            message: error.message || "Error al obtener los detalles de la venta"
+        });
+    }
+}
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
@@ -111,5 +148,8 @@ export default {
     detallesDeUnaVentaFiada,
     historialEstadisticoVentasConAbono,
     margenDeGananciaDelMes,
-    historialMargenesDeGanancia
+    historialMargenesDeGanancia,
+    mostrarHistorialVentas,
+    mostrarVentasPorFecha,
+    mostrarDetallesVenta
 };

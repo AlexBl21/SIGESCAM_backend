@@ -552,14 +552,84 @@ async function historialMargenesDeGanancia(anio) {
     };
 }
 
+async function obtenerHistorialVentas() {
+
+    try {
+        const ventas = await Venta.findAll({
+            attributes: ['id_venta', 'fecha_venta', 'total', 'es_fiado'],
+
+            order: [['fecha_venta', 'DESC']]
+        });
+        if (!ventas || ventas.lengFth === 0) {
+            throw new NotFoundError("No se hay ventas registradas.");
+        }
+        return ventas;
+    } catch (error) {
+        throw new InternalServerError("Error al obtener el historial de ventas.");
+    }
+}
+
+
+async function filtrarVentasPorFecha(fechaInicio, fechaFin) {
+    const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
+    const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+
+    fechaInicioObj.setMinutes(fechaInicioObj.getMinutes() - fechaInicioObj.getTimezoneOffset());
+    fechaFinObj.setMinutes(fechaFinObj.getMinutes() - fechaFinObj.getTimezoneOffset());
+
+    const ventas = await Venta.findAll({
+        where: {
+            fecha_venta: {
+                [Op.between]: [fechaInicioObj, fechaFinObj]
+            }
+        },
+        order: [['fecha_venta', 'DESC']]
+    });
+
+    if (!ventas || ventas.length === 0) {
+        throw new NotFoundError("No se encontraron ventas en el rango de fechas especificado.");
+    }
+    return ventas;
+}
+
+async function obtenerDetalleVentas(idVenta) {
+    if (!idVenta) {
+        throw new BadRequestError("El id de la venta no puede ser vacío.");
+    }
+
+    const venta = await Venta.findOne({
+        where: { id_venta: idVenta },
+        include: [
+            {
+                model: DetalleVenta,
+                include: [
+                    {
+                        model: Producto,
+                        attributes: ['id_producto', 'nombre', 'precio_venta']
+                    }
+                ]
+            }
+        ]
+    });
+
+    if (!venta) {
+        throw new NotFoundError("Venta no encontrada.");
+    }
+    return venta;
+
+}
+
 export default {
     registrarVenta,
-    verificarStock, 
-    agregarProductoAVentaTemporal, 
-    obtenerVentasDelDia, 
-    obtenerTop3ProductosMasVendidosDeLaSemana, 
-    detallesDeUnaVentaFiada, 
-    obtenerHistorialEstadisticoVentasConAbono, 
-    margenDeGananciaDelMes, 
-    historialMargenesDeGanancia
+    verificarStock,
+    agregarProductoAVentaTemporal,
+    obtenerVentasDelDia,
+    obtenerTop3ProductosMasVendidosDeLaSemana,
+    detallesDeUnaVentaFiada,
+    obtenerHistorialEstadisticoVentasConAbono,
+    margenDeGananciaDelMes,
+    historialMargenesDeGanancia,
+    obtenerHistorialVentas,
+    filtrarVentasPorFecha,
+    obtenerDetalleVentas
 };
