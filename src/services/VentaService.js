@@ -279,15 +279,22 @@ async function detallesDeUnaVentaFiada(idVenta) {
         if (!detalles) {
             throw new NotFoundError("No se encontraron detalles de esa venta");
         }
+        const detallesFormateados = detalles.detalle_venta.map(det => ({
+            nombre_producto: det.producto?.nombre ?? 'Nombre no disponible',
+            cantidad: det.cantidad,
+            precio_unitario: det.precio,
+            subtotal: det.cantidad * det.precio
+        }));
         const total = calcularTotalVenta(detalles.detalle_venta);
         const abonoTotal = calcularTotalAbonos(detalles.abonos);
         const resultadoFinal = {
             fecha: detalles.fecha_venta,
-            detallesVenta: detalles.detalle_venta,
+            detallesVenta: detallesFormateados, // ya formateado con el nombre del producto
             deudor: detalles.deudor,
             totalVenta: total,
             abono: abonoTotal
-        }
+        };
+
 
         return resultadoFinal;
 
@@ -499,13 +506,17 @@ async function historialMargenesDeGanancia(anio) {
         actual.setUTCMonth(actual.getUTCMonth() + 1);
     }
 
+    // Invertir el orden de los meses para que vayan del último al primero
+    meses.reverse();
+
     const historial = [];
     let sumaMargenes = 0;
 
     for (const mes of meses) {
         const year = mes.getUTCFullYear();
         const month = mes.getUTCMonth();
-        const nombreMes = mes.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+        // Solo el nombre del mes, sin el año
+        const nombreMes = mes.toLocaleString('es-ES', { month: 'long' });
 
         // Rango de fechas del mes
         const inicioMes = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
@@ -687,6 +698,7 @@ function calcularTotales(ventas) {
         ventas: ventasConTotales
     };
 }
+
 
 export default {
     registrarVenta,

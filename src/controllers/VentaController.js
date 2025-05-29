@@ -1,4 +1,3 @@
-
 import VentaService from '../services/VentaService.js';
 import { BadRequestError, InternalServerError } from '../errors/Errores.js';
 
@@ -158,6 +157,16 @@ async function mostrarDetallesVenta(req, res) {
     }
 }
 
+const obtenerDetalleVenta = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const resultado = await VentaService.obtenerDetalleVentas(id);
+        res.json(resultado); // 🔁 Aquí se debe ver el nombre del producto en la respuesta JSON
+    } catch (error) {
+        next(error);
+    }
+};
+
 export default {
     agregarProductoAVentaTemporal,
     registrarVenta,
@@ -169,5 +178,6 @@ export default {
     historialMargenesDeGanancia,
     mostrarHistorialVentas,
     mostrarVentasPorFecha,
-    mostrarDetallesVenta
+    mostrarDetallesVenta, 
+    obtenerDetalleVenta
 };
