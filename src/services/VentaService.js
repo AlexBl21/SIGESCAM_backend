@@ -684,33 +684,12 @@ async function obtenerDetalleVentas(idVenta) {
 }
 
 function calcularTotales(ventas) {
-    const ventasArray = Array.isArray(ventas) ? ventas : [ventas];
     let totalGeneral = 0;
-
+    const ventasArray = Array.isArray(ventas) ? ventas : [ventas];
     const ventasConTotales = ventasArray.map(venta => {
-        const detalles = venta.detalle_ventas.map(detalle => {
-            const producto = detalle.Producto;
-            const precioUnitario = Number(producto?.precio_venta) || 0;
-            const cantidad = Number(detalle.cantidad);
-            const subtotal = cantidad * precioUnitario;
-
-            return {
-                id_producto: producto?.id_producto,
-                nombre_producto: producto?.nombre || "Nombre no disponible",
-                precio_unitario: precioUnitario,
-                cantidad,
-                subtotal
-            };
-        });
-
-        const totalVenta = detalles.reduce((acc, d) => acc + d.subtotal, 0);
-        totalGeneral += totalVenta;
-
+        totalGeneral += Number(venta.total);
         return {
-            id_venta: venta.id_venta,
-            fecha: venta.fecha,
-            productos: detalles,
-            total: totalVenta
+            ...venta.toJSON()
         };
     });
 
