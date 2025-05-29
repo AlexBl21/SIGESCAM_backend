@@ -28,6 +28,7 @@ import notifiUsuarioRoutes from "./routes/NotificacionUsuarioRoutes.js";
 import preferenciaNotificacionRoutes from "./routes/PreferenciaNotiRoutes.js";
 import ventaRoutes from "./routes/VentaRoutes.js";
 import DeudorRoutes from "./routes/DeudorRoutes.js";
+import os from "os";
 
 dotenv.config({
   path: "../.env"
@@ -49,10 +50,10 @@ app.use("/categorias", CategoriaRoutes);
 db.authenticate()
   .then(() => console.log("Databse connection successful"))
   .catch((error) => console.log("Connection error: ", error));
-
+/*
 app.listen(process.env.PUERTO, () => {
   console.log(`escuchando en http://localhost:${process.env.PUERTO}`);
-});
+});*/
 
 
 /*
@@ -106,3 +107,18 @@ if(d){
   console.log("No hay deudores");
 }*/
 
+const interfaces = os.networkInterfaces();
+let localIP = 'localhost'; // fallback
+
+for (let name in interfaces) {
+  for (let iface of interfaces[name]) {
+    if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith('192.168')) {
+      localIP = iface.address;
+    }
+  }
+}
+const port = process.env.PUERTO;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`API escuchando en:`);
+  console.log(`Localhost: http://localhost:${port}`);
+  console.log(`Red local: http://${localIP}:${port}`);})

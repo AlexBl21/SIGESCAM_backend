@@ -16,10 +16,12 @@ async function eliminarPorDNI(dni) {
 async function listarDeudores() {
     try {
         const deudores = await Deudor.findAll({
+            where: { monto_pendiente: {
+                    [Op.gt]: 0
+                } },
             include: [
                 {
                     model: Venta,
-                    where: { es_fiado: true },
                     attributes: ['total'],
                     include: [
                         {
