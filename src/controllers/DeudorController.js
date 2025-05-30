@@ -1,5 +1,6 @@
 import DeudorService from "../services/DeudorService.js";
-import pool from "../db/db.js";
+import sequelize from "../db/db.js"; // Asegúrate de que la ruta sea correcta
+
 
 async function obtenerDeudorPorDNI(req, res) {
     const { dni } = req.params;
@@ -67,55 +68,19 @@ async function eliminarDeudorPorDNI(req, res) {
 
 }
 
-const registrarAbono = async (req, res) => {
-    const { id_venta } = req.params;
-    const { monto_abono, fecha_abono } = req.body;
+//registrar abono a una venta fiada
+async function registrarAbono(req, res) {
+    const { dni_deudor, id_venta, monto_abono, fecha_abono } = req.body;
 
     try {
-        const [rows] = await pool.query(
-            `SELECT v.id_venta, v.total, v.dni_deudor, d.monto_pendiente
-             FROM venta v
-             JOIN deudor d ON v.dni_deudor = d.dni_deudor
-             WHERE v.id_venta = ? AND v.es_fiado = TRUE`,
-            [id_venta]
-        );
-
-        if (rows.length === 0) {
-            return res.status(404).json({ mensaje: "Venta fiada no encontrada" });
-        }
-
-        const venta = rows[0];
-
-        if (isNaN(monto_abono) || monto_abono <= 0) {
-            return res.status(400).json({ mensaje: "El monto del abono no es válido" });
-        }
-
-        const nuevaDeuda = venta.monto_pendiente - monto_abono;
-
-        if (nuevaDeuda < 0) {
-            return res.status(400).json({ mensaje: "El abono excede la deuda pendiente" });
-        }
-
-        await pool.query(
-            "INSERT INTO abono (monto_abono, fecha_abono, id_venta) VALUES (?, ?, ?)",
-            [monto_abono, fecha_abono, id_venta]
-        );
-
-        await pool.query(
-            "UPDATE deudor SET monto_pendiente = ?, pagado = ? WHERE dni_deudor = ?",
-            [nuevaDeuda, nuevaDeuda === 0, venta.dni_deudor]
-        );
-
-        res.status(200).json({
-            mensaje: "Abono registrado correctamente",
-            nuevaDeuda
-        });
-
+        const abono = await DeudorService.registrarAbono(dni_deudor, id_venta, monto_abono, fecha_abono);
+        res.status(201).json({ mensaje: "Abono registrado con éxito", abono });
     } catch (error) {
-        console.error("Error al registrar abono:", error);
-        res.status(500).json({ mensaje: "Error interno del servidor" });
+        res.status(error.statusCode || 400).json({
+            mensaje: error.message || "Error al registrar el abono"
+        });
     }
-};
+}
 
 export default { obtenerDeudorPorDNI, listarDeudores, ventasFiadas, buscarPorNombreODNI, eliminarDeudorPorDNI, registrarAbono };
 
