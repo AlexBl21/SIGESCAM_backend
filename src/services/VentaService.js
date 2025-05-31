@@ -166,24 +166,27 @@ async function registrarVenta({ productos, dni_usuario, deudor, es_fiado, fecha 
 async function obtenerVentasDelDia() {
     const hoy = new Date();
 
-    const inicioDelDiaUTC = new Date(Date.UTC(
-        hoy.getUTCFullYear(),
-        hoy.getUTCMonth(),
-        hoy.getUTCDate(),
+    
+    const inicioDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0);
+    const finDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
+
+    const inicioUTC = new Date(Date.UTC(
+        hoy.getFullYear(),
+        hoy.getMonth(),
+        hoy.getDate(),
         0, 0, 0, 0
     ));
-
-    const finDelDiaUTC = new Date(Date.UTC(
-        hoy.getUTCFullYear(),
-        hoy.getUTCMonth(),
-        hoy.getUTCDate(),
+    const finUTC = new Date(Date.UTC(
+        hoy.getFullYear(),
+        hoy.getMonth(),
+        hoy.getDate(),
         23, 59, 59, 999
     ));
 
     const cantidadVentas = await Venta.count({
         where: {
             fecha_venta: {
-                [Op.between]: [inicioDelDiaUTC, finDelDiaUTC]
+                [Op.between]: [inicioUTC, finUTC]
             }
         }
     });

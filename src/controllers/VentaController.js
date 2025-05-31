@@ -35,6 +35,7 @@ export const obtenerVentasDelDia = async (req, res) => {
     try {
         const cantidadVentas = await VentaService.obtenerVentasDelDia();
         res.json({ ventasHoy: cantidadVentas });
+        console.log(`Ventas del día: ${cantidadVentas}`);
     } catch (error) {
         next(error);
     }
@@ -178,6 +179,6 @@ export default {
     historialMargenesDeGanancia,
     mostrarHistorialVentas,
     mostrarVentasPorFecha,
-    mostrarDetallesVenta, 
+    mostrarDetallesVenta,
     obtenerDetalleVenta
 };
